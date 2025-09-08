@@ -1,0 +1,199 @@
+import { CircleOff, Download, ExternalLink, Funnel, HistoryIcon, RefreshCw } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader } from "../components/ui/card";
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/options/components/ui/table";
+import { Button } from "../components/ui/button";
+import { Link } from "react-router";
+import { HistoryItem, HistoryStore } from "@/common/interfaces";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
+import { trustWorthyOptions } from "../interfaces";
+import { ResetHistoryConfirm } from "../components/ResetHistoryConfirm";
+import { defaultHistoryStore } from "@/common/defaults";
+import { toast } from "sonner"
+
+export default function History() {
+    const [history, setHistory] = useState<HistoryItem[]>([]);
+    /* FILTERS AND ACTIONS */
+    const [selectedTrustWorthy, setSelectedTrustWorthy] = useState<string>('all');
+
+    /* Get Settings from localstorage */
+    useEffect(() => {
+        chrome.storage.local.get(["historyWebsites"]).then((res) => {
+            if (!res || res === null) {
+                return null
+            }
+
+            const data: HistoryStore = JSON.parse(res.historyWebsites)
+            setHistory(data.data as HistoryItem[])
+            return data.data as HistoryItem[]
+        });
+    }, []);
+
+    /* Function that is responsible to reset the History */
+    function resetHistory() {
+        try {
+            chrome.storage.local.set({ historyWebsites: JSON.stringify(defaultHistoryStore) }).then(() => {
+                console.log(`🦈steamShark[BG Service]: History Storage cleared.`);
+            });
+            //Inject popup/toaster of success
+            toast.success("History has been cleaned.")
+            /* RESET LOCAL OBJECT */
+            setHistory([]);
+        } catch (err) {
+            //Inject popup/toaster of error 
+            toast.error("An error occured while cleaning history.", {
+                description: 'You can see the error in console',
+            })
+            console.log("🦈steamShark error: " + err)
+        }
+    }
+
+    if (!history) {
+        return (
+            <div>
+                <p>Error</p>
+            </div>
+        )
+    }
+
+    return (
+        <section className="container flex flex-col gap-5">
+            {/* HEADER */}
+            <div className="flex flex-col gap-2">
+                <div className="flex flex-row items-center text-3xl font-bold gap-2">
+                    <HistoryIcon className="icon-primary w-5 h-5" />
+                    <h2>History</h2>
+                </div>
+                <p className="text-muted-foreground">
+                    Verify last Steam related websites you visited
+                </p>
+            </div>
+            {/* Info part */}
+            <div className="flex flex-row gap-5 w-full">
+                <Card className="w-1/3">
+                    <CardHeader className="text-lg font-semibold">
+                        Total Scans
+                    </CardHeader>
+                    <CardContent className="flex flex-col gap-5">
+                        <p className="text-3xl font-bold text-primary">5</p>
+                        <p className="text-sm text-muted-foreground">Today</p>
+                    </CardContent>
+                </Card>
+                <Card className="w-1/3">
+                    <CardHeader className="text-lg font-semibold">
+                        Safe Websites
+                    </CardHeader>
+                    <CardContent className="flex flex-col gap-5">
+                        <p className="text-3xl font-bold text-success">5</p>
+                        <p className="text-sm text-muted-foreground">Verified Secure</p>
+                    </CardContent>
+                </Card>
+                <Card className="w-1/3">
+                    <CardHeader className="text-lg font-semibold">
+                        Threads Blocked
+                    </CardHeader>
+                    <CardContent className="flex flex-col gap-5">
+                        <p className="text-3xl font-bold text-destructive">5</p>
+                        <p className="text-sm text-muted-foreground">Malicious Websites</p>
+                    </CardContent>
+                </Card>
+            </div>
+            {/* Filters */}
+            <Card>
+                <CardHeader className="flex flex-row items-center gap-2">
+                    <Funnel className="icon-primary w-4 h-4" />
+                    <h3 className="text-xl font-bold">Filters</h3>
+                </CardHeader>
+                <CardContent className="flex flex-col md:flex-row gap-4">
+                    {/* SELECT TRUSTWORTHY */}
+                    <Select value={selectedTrustWorthy} onValueChange={setSelectedTrustWorthy}>
+                        <SelectTrigger className="md:w-48 cursor-pointer">
+                            <SelectValue placeholder="All Categories" />
+                        </SelectTrigger>
+
+                        <SelectContent>
+                            {trustWorthyOptions.map(opt => (
+                                <SelectItem key={opt.value} value={opt.value} className="cursor-pointer">
+                                    {opt.label}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    {/* OPTIONS BUTTONS */}
+                    <div className="flex gap-2">
+                        {/* REMOVE HISTORY */}
+                        <ResetHistoryConfirm onConfirm={resetHistory} />
+
+                        <Button variant="secondary" className="flex items-center gap-3 cursor-pointer">
+                            <RefreshCw className="icon-primary w-5 h-5" />
+                            <span>Refresh</span>
+                        </Button>
+
+                        <Button disabled variant="secondary" className="flex items-center gap-3 cursor-pointer">
+                            <Download className="icon-primary w-5 h-5" />
+                            <span>Export</span>
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* TABLE */}
+            <Card>
+                <CardHeader>
+                    <h3 className="text-xl font-bold">Recent Activity</h3>
+                </CardHeader>
+                <CardContent>
+                    {history === null || history.length === 0 ? (
+                        <div className="w-full flex flex-row items-center gap-3 justify-center">
+                            <CircleOff className="icon-primaet 2-5 h-5" />
+                            <p className="text-xl font-bold">No history to show!</p>
+                        </div>
+                    ) : (
+                        <Table>
+                            <TableCaption>A list of your recent steam related websites.</TableCaption>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead>Website</TableHead>
+                                    <TableHead>Timestamp</TableHead>
+                                    <TableHead>Details</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+
+                                {history.map((item, index) => (
+                                    <TableRow key={index} className="w-full">
+                                        {/* STATUS */}
+                                        <TableCell className="w-1/6">
+                                            {/* <div className="flex items-center space-x-2">
+                                                {getStatusIcon(item.status)}
+                                                {getStatusBadge(item.status)}
+                                            </div> */}
+                                        </TableCell>
+                                        {/* WEBSITE */}
+                                        <TableCell className="w-3/6">
+                                            <span className="font-medium">{item.url}</span>
+                                        </TableCell>
+                                        {/* TIMESTAMP */}
+                                        <TableCell className="w-1/6">
+                                            <span className="text-muted-foreground">{item.timestamp}</span>
+                                        </TableCell>
+                                        {/* STEAMSHARK WWBSITE PAGE */}
+                                        <TableCell className="w-1/6">
+                                            <Button disabled variant="ghost" className="flex items-center gap-2 cursor-pointer hover:bg-background/50">
+                                                <Link to={`http://localhost:8080/website/${item.url}`}>{/* CHANGE AFTER TO THE ACTUAL WEBSITE */}
+                                                    <ExternalLink className="text-muted-foreground w-3 h-3" />
+                                                    <span className="text-sm text-muted-foreground">Details</span>
+                                                </Link>
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    )}
+                </CardContent>
+            </Card>
+        </section>
+    );
+}

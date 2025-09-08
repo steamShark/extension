@@ -91,6 +91,11 @@ async function fetchDataAndStore() {
     "https://raw.githubusercontent.com/Franciscoborges2002/steamShark/main/utils/trust.json",
   ];
 
+  /* const urls = [
+    "http://localhost:8080/api/v1/websites?is_scam=true",
+    "http://localhost:8080/api/v1/websites?is_scam=false"
+  ] */
+
   let resultJSONTrust;
 
   await chrome.storage.local.get(["trustWebsites"], (result) => {
@@ -211,7 +216,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         data: [
           {
             url: domain,
-            visited: currentTime,
+            timestamp: currentTime,
           },
         ],
       };
@@ -240,13 +245,13 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         //If it is the first time we are adding to the history list
         resultHistory.data.unshift({
           url: domain,
-          visited: currentTime,
+          timestamp: currentTime,
         });
       } else if (
         resultHistory.data.length > 0 &&
         resultHistory.data[0].url === domain &&
         currentTime.getTime() -
-          new Date(resultHistory.data[0].visited).getTime() <
+          new Date(resultHistory.data[0].timestamp).getTime() <
           settings.data.howManyTimeRegisterRepeatedWebsiteInHistory
       ) {
         //If theres at least on item if the last url is the same as we trying to add, and the time is higher than the time that is in the settings,
@@ -271,7 +276,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
 
         resultHistory.data.unshift({
           url: domain,
-          visited: currentTime,
+          timestamp: currentTime,
         });
 
         console.log(resultHistory);
@@ -279,7 +284,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         //Just add the website to the list
         resultHistory.data.unshift({
           url: domain,
-          visited: currentTime,
+          timestamp: currentTime,
         });
       }
 

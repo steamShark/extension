@@ -1,0 +1,98 @@
+@import "./index.css";
+
+/* ALL DOCUMENT */
+* {
+  margin: 0;
+  padding: 0;
+  color: var(--text-primary);
+  background: var(--background);
+}
+
+body,
+#root {
+  width: var(--popup-width);
+  height: var(--popup-height);
+}
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  width: 100%;
+  height: 100%;
+}
+
+/* HEADER */
+header {
+  background: var(--background-secondary);
+  padding-top: 10px;
+  padding-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+header h1{
+  background-color: var(--background-secondary);
+}
+
+.sub-header {
+  font-size: smaller;
+  background-color: var(--background-secondary);
+}
+
+/* IMAGE & ICONS */
+.image img {
+  width: 32px;
+  height: 32px;
+}
+
+.icon {
+  color: var(--icon-primary);
+  width: 16px;
+  height: 16px;
+}
+
+/* CONTENT */
+.content {
+  padding: 10px 0;
+  display: flex;
+  justify-content: center;
+}
+
+/* LIST */
+.content ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: start;
+}
+
+ul {
+  list-style-type: none;
+}
+
+ul li {/* EVERY LINK IN THE LIST */
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+li a {
+  font-size: medium;
+  font-weight: lighter;
+  text-decoration: none;
+}
+
+li a:hover {
+  font-weight: bold;
+}
+
+/* FOOTER */
+footer {
+  padding: 10px 0;
+  background: var(--background-secondary);
+}

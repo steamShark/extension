@@ -1,0 +1,94 @@
+.header-inner {
+  padding: 20px 50px 0px 50px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Brand */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.brand-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+}
+
+.brand-mark {
+  width: 2rem; /* 32px */
+  height: 2rem;
+  border-radius: 0.5rem;
+  display: flex;
+  place-items: center;
+  place-content: center;
+  background: var(--gradient-primary);
+}
+
+.brand-mark > span {
+  color: var(--primary-foreground);
+  font-weight: 700;
+  font-size: 1.125rem; /* 18px */
+}
+
+.brand-name {
+  font-size: 1.5rem; /* 24px */
+  font-weight: 700;
+  background: var(--gradient-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Desktop nav */
+.nav-desktop {
+  display: none;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Mobile nav shows by default */
+.nav-mobile {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+/* Breakpoint — show desktop nav >= 768px, hide mobile */
+@media (min-width: 768px) {
+  .nav-desktop {
+    display: flex;
+  }
+  .nav-mobile {
+    display: none;
+  }
+}
+
+.nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  text-decoration: none;
+  color: var(--muted-foreground);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.nav-link:hover {
+  color: var(--foreground);
+  background: var(--card-hover);
+}
+
+.nav-link.active {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.nav-mobile-label {
+  font-size: 0.875rem;
+}

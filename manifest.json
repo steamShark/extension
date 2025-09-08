@@ -1,28 +1,35 @@
 {
   "manifest_version": 3,
   "name": "🦈SteamShark",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Steam shark is an extension that verifies if the page you're getting is a scam website or not.",
   "author": "Francisco Borges",
   "content_scripts": [
     {
-      "js": ["./src/content.js"],
+      "js": ["src/content_scripts/content.ts"],
       "matches": ["<all_urls>"]
     }
   ],
   "permissions": ["storage"],
   "background": {
-    "service_worker": "./src/service_workers/background.js"
+    "service_worker": "src/service_workers/background.ts"
   },
-  
+
   "action": {
-    "default_popup": "./src/popup/popup.html",
-    "default_icon": "./public/48.png"
+    "default_title": "SteamShark",
+    "default_popup": "src/popup/index.html",
+    "default_icon": {
+      "16": "logos/16.png",
+      "32": "logos/32.png",
+      "48": "logos/48.png",
+      "128": "logos/128.png"
+    }
   },
+  "options_page": "src/options/index.html",
   "icons": {
-    "16": "./public/16.png",
-    "32": "./public/32.png",
-    "48": "./public/48.png",
-    "128": "./public/128.png"
+    "16": "logos/16.png",
+    "32": "logos/32.png",
+    "48": "logos/48.png",
+    "128": "logos/128.png"
   }
 }

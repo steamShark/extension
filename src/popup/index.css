@@ -1,0 +1,22 @@
+/* VARS */
+:root {
+  /* 
+  COLORS 
+  */
+  /* BACKGROUNDS */
+  --background: hsl(210 11% 15%); /* NORMAL BACKGROUND COLOR*/
+  --background-secondary: hsl(217 19% 18%); /* CARD BACKGROUND COLOR */
+  --background-badge: hsl(210 11% 15%); /*  */
+  --border-badge: hsl(217 19% 24%); /* MUTED BACKGROUND COLOR */
+
+  /* TEXT AND ICONS */
+  --text-primary: hsl(0, 0%, 100%); /* WHITE AS COLOR FOR TEXT */
+  --text-foreground: hsl(215 16% 57%); /* ANOTHER COLOR FOR HOVERING */
+  --icon-primary: hsl(0, 100%, 100%); /* WHITE AS COLOR FOR ICONS */
+
+  /* 
+  DIMENSIONS 
+  */
+  --popup-width: 200px;
+  --popup-height: 200px;
+}

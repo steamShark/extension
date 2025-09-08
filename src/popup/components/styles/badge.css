@@ -1,0 +1,13 @@
+@import "../../index.css";
+.badge {
+  display: inline-block;
+  background-color: var(--background-badge);
+  color: var(--text-primary);
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 2px 6px;
+  margin-top: 4px;
+  border-radius: 6px;
+    border: 1px solid var(--border-badge);
+  user-select: none;
+}

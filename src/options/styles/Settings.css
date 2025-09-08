@@ -1,0 +1,45 @@
+.settings-group-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+.settings-group-row label {
+
+}
+
+.settings-group-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.settings-group select,
+.settings-group input[type="number"] {
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 10px;
+  font-size: 0.95rem;
+  color: #e2e8f0;
+  outline: none;
+  transition: border 0.2s, box-shadow 0.2s;
+}
+
+.settings-group select:focus,
+.settings-group input[type="number"]:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+.time-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.time-input span {
+  font-size: 0.9rem;
+  color: #94a3b8;
+}
