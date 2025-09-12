@@ -1,6 +1,5 @@
 import { CircleCheck, Database, Download, ExternalLink, Funnel, History, RefreshCw, Search } from "lucide-react";
-import { useChromeStorage } from "../hooks/useChromeStorage";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardHeader, CardContent } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
@@ -8,23 +7,61 @@ import { Button } from "../components/ui/button";
 import { categoryOptions, permittedActions, trustWorthyOptions } from "../interfaces";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import { Link } from "react-router";
-import { getStatusBadge, getStatusIcon } from "../utils/category";
-
-type Site = { pattern: string; mode: "allow" | "block" };
+import { PermittedItem, ScamStore, TrustItem, TrustStore } from "@/common/interfaces";
 
 export default function WebsitesList() {
-    const [sites, setSites] = useChromeStorage<Site[]>("sites", []);
+    /* GET FROM LOCAL STORAGE */
+    const [databaseScam, setDatabaseScam] = useState<ScamStore | null>(null);
+    const [databaseTrust, setDatabaseTrust] = useState<TrustStore | null>(null);
+    const [databasePermitted, setDatabasePermitted] = useState<PermittedItem[] | null>(null);
     const [pattern, setPattern] = useState("");
-    const [mode, setMode] = useState<Site["mode"]>("block");
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [selectedTrustWorthy, setSelectedTrustWorthy] = useState<string>('all');
     const [permittedAction, setPermittedAction] = useState<string>('add');
 
-    const add = () => {
+    useEffect(() => {
+        /* SCAM WEBSITES */
+        chrome.storage.local.get(["scamWebsites"]).then((res) => {
+            if (res && res.scamWebsites) {
+                try {
+                    const data: ScamStore = JSON.parse(res.scamWebsites);
+                    setDatabaseScam(data);
+                } catch (e) {
+                    console.error("Failed to parse settings:", e);
+                }
+            }
+        });
+
+        /* TRUST WEBSITES */
+        chrome.storage.local.get(["trustWebsites"]).then((res) => {
+            if (res && res.trustWebsites) {
+                try {
+                    const data: TrustStore = JSON.parse(res.trustWebsites);
+                    setDatabaseTrust(data);
+                } catch (e) {
+                    console.error("Failed to parse settings:", e);
+                }
+            }
+        });
+
+        /* PERMITTED WEBSITES */
+        chrome.storage.local.get(["permittedWebistes"]).then((res) => {
+            if (res && res.permittedWebistes) {
+                try {
+                    const data: PermittedItem[] = JSON.parse(res.permittedWebistes).data;
+                    setDatabasePermitted(data);
+                } catch (e) {
+                    console.error("Failed to parse settings:", e);
+                }
+            }
+        });
+    }, []);
+
+    /* const add = () => {
         if (!pattern.trim()) return;
         const next = [...sites, { pattern: pattern.trim(), mode }];
-        setSites(next);
+        setDatabase(next);
         setPattern("");
     };
 
@@ -32,7 +69,7 @@ export default function WebsitesList() {
         const next = sites.slice();
         next.splice(idx, 1);
         setSites(next);
-    };
+    }; */
 
     const databaseEntries = [
         {
@@ -91,11 +128,14 @@ export default function WebsitesList() {
         }
     ];
 
+    if(!databaseScam || !databaseTrust){
+        return null;
+    }
+
     const stats = {
-        total: databaseEntries.length,
-        safe: databaseEntries.filter(e => e.status === 'safe').length,
-        dangerous: databaseEntries.filter(e => e.status === 'dangerous').length,
-        reports: databaseEntries.reduce((sum, e) => sum + e.reportCount, 0)
+        total: databaseScam.data.length + databaseTrust.data.length,
+        safe: databaseTrust.data.length,
+        dangerous: databaseScam.data.length,
     };
 
     return (
@@ -117,7 +157,7 @@ export default function WebsitesList() {
                         Total Entries
                     </CardHeader>
                     <CardContent className="flex flex-col gap-5">
-                        <p className="text-3xl font-bold text-primary">5</p>
+                        <p className="text-3xl font-bold text-primary">{stats.total}</p>
                         <p className="text-sm text-muted-foreground">in database</p>
                     </CardContent>
                 </Card>
@@ -126,7 +166,7 @@ export default function WebsitesList() {
                         Safe
                     </CardHeader>
                     <CardContent className="flex flex-col gap-5">
-                        <p className="text-3xl font-bold text-success">5</p>
+                        <p className="text-3xl font-bold text-success">{stats.safe}</p>
                         <p className="text-sm text-muted-foreground">Verified Secure</p>
                     </CardContent>
                 </Card>
@@ -135,7 +175,7 @@ export default function WebsitesList() {
                         Threads
                     </CardHeader>
                     <CardContent className="flex flex-col gap-5">
-                        <p className="text-3xl font-bold text-destructive">5</p>
+                        <p className="text-3xl font-bold text-destructive">{stats.dangerous}</p>
                         <p className="text-sm text-muted-foreground">Malicious Websites</p>
                     </CardContent>
                 </Card>
@@ -248,63 +288,100 @@ export default function WebsitesList() {
             </Card>
 
             {/* Database */}
-            <Card>
-                <CardHeader className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <Database className="icon-primary w-5 h-5" />
-                        <h3 className="text-xl font-bold">Local Database</h3>
-                    </div>
+            <div className="flex flex-row gap-5 items-start">
+                <Card>
+                    <CardHeader className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <Database className="icon-primary w-5 h-5" />
+                            <h3 className="text-xl font-bold">Local Database</h3>
+                        </div>
 
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <History className="icon-primary w-3 h-3" />
-                        <p>Last Update:</p>
-                        <p>2024-01-15 14:30:22</p>
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableCaption>A list of entries in local database.</TableCaption>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="w-[100px]">Status</TableHead>
-                                <TableHead>Domain</TableHead>
-                                <TableHead>Category</TableHead>
-                                <TableHead>Details</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {databaseEntries.map((item, index) => (
-                                <TableRow key={index} className="w-full">
-                                    {/* STATUS */}
-                                    <TableCell className="w-1/6">
-                                        <div className="flex items-center space-x-2">
-                                            {getStatusIcon(item.status)}
-                                            {getStatusBadge(item.status)}
-                                        </div>
-                                    </TableCell>
-                                    {/* WEBSITE */}
-                                    <TableCell className="w-3/6">
-                                        <span className="font-medium">{item.domain}</span>
-                                    </TableCell>
-                                    {/* TIMESTAMP */}
-                                    <TableCell className="w-1/6">
-                                        <span className="text-muted-foreground">{item.timestamp}</span>
-                                    </TableCell>
-                                    {/* STEAMSHARK WWBSITE PAGE */}
-                                    <TableCell className="w-1/6">
-                                        <Button disabled variant="ghost" className="flex items-center gap-2 cursor-pointer hover:bg-background/50">
-                                            <Link to={`http://localhost:8080/website/${item.url}`}>
-                                                <ExternalLink className="text-muted-foreground w-3 h-3" />
-                                                <span className="text-sm text-muted-foreground">Details</span>
-                                            </Link>
-                                        </Button>
-                                    </TableCell>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <History className="icon-primary w-3 h-3" />
+                            <p>Last Update:</p>
+                            {databaseTrust?.lastCheckup}
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <Table>
+                            <TableCaption>A list of scam websites in local database.</TableCaption>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="w-[100px]">Status</TableHead>
+                                    <TableHead>Domain</TableHead>
+                                    <TableHead>Category</TableHead>
+                                    <TableHead>Details</TableHead>
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
+                            </TableHeader>
+                            <TableBody>
+                                {databaseScam && databaseScam.data.map((item: string, index) => (
+                                    <TableRow key={index} className="w-full">
+                                        {/* WEBSITE */}
+                                        <TableCell className="w-3/6">
+                                            <span className="font-medium">{item}</span>
+                                        </TableCell>
+                                        {/* STEAMSHARK WWBSITE PAGE */}
+                                        <TableCell className="w-1/6">
+                                            <Button disabled variant="ghost" className="flex items-center gap-2 cursor-pointer hover:bg-background/50">
+                                                <Link to={`http://localhost:8080/website/${item}`}>
+                                                    <ExternalLink className="text-muted-foreground w-3 h-3" />
+                                                    <span className="text-sm text-muted-foreground">Details</span>
+                                                </Link>
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <Database className="icon-primary w-5 h-5" />
+                            <h3 className="text-xl font-bold">Local Database</h3>
+                        </div>
+
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <History className="icon-primary w-3 h-3" />
+                            <p>Last Update:</p>
+                            {databaseTrust?.lastCheckup}
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <Table>
+                            <TableCaption>A list of trusted websites in local database.</TableCaption>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="w-[100px]">Status</TableHead>
+                                    <TableHead>Domain</TableHead>
+                                    <TableHead>Category</TableHead>
+                                    <TableHead>Details</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {databaseTrust && databaseTrust.data.map((item: TrustItem, index) => (
+                                    <TableRow key={index} className="w-full">
+                                        {/* WEBSITE */}
+                                        <TableCell className="w-3/6">
+                                            <span className="font-medium">{item.url}</span>
+                                        </TableCell>
+                                        {/* STEAMSHARK WWBSITE PAGE */}
+                                        <TableCell className="w-1/6">
+                                            <Button disabled variant="ghost" className="flex items-center gap-2 cursor-pointer hover:bg-background/50">
+                                                <Link to={`http://localhost:8080/website/${item.url}`}>
+                                                    <ExternalLink className="text-muted-foreground w-3 h-3" />
+                                                    <span className="text-sm text-muted-foreground">Details</span>
+                                                </Link>
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+            </div>
         </section>
     );
 }

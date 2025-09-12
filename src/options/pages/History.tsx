@@ -1,23 +1,25 @@
-import { CircleOff, Download, ExternalLink, Funnel, HistoryIcon, RefreshCw } from "lucide-react";
+import { CircleOff, Download, Funnel, HistoryIcon, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader } from "../components/ui/card";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/options/components/ui/table";
 import { Button } from "../components/ui/button";
-import { Link } from "react-router";
-import { HistoryItem, HistoryStore } from "@/common/interfaces";
+import { HistoryItem, HistoryStore, SettingsData } from "@/common/interfaces";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { trustWorthyOptions } from "../interfaces";
 import { ResetHistoryConfirm } from "../components/ResetHistoryConfirm";
 import { defaultHistoryStore } from "@/common/defaults";
 import { toast } from "sonner"
+import HistoryDataTable from "../components/HistoryDataTable";
 
 export default function History() {
     const [history, setHistory] = useState<HistoryItem[]>([]);
+    const [settings, setSettings] = useState<SettingsData | null>(null);
     /* FILTERS AND ACTIONS */
     const [selectedTrustWorthy, setSelectedTrustWorthy] = useState<string>('all');
 
     /* Get Settings from localstorage */
     useEffect(() => {
+        /* Get history */
         chrome.storage.local.get(["historyWebsites"]).then((res) => {
             if (!res || res === null) {
                 return null
@@ -26,6 +28,18 @@ export default function History() {
             const data: HistoryStore = JSON.parse(res.historyWebsites)
             setHistory(data.data as HistoryItem[])
             return data.data as HistoryItem[]
+        });
+
+        /* Get settings */
+        chrome.storage.local.get(["settings"]).then((res) => {
+            if (res && res.settings) {
+                try {
+                    const data: SettingsData = JSON.parse(res.settings).data;
+                    setSettings(data);
+                } catch (e) {
+                    console.error("Failed to parse settings:", e);
+                }
+            }
         });
     }, []);
 
@@ -48,7 +62,29 @@ export default function History() {
         }
     }
 
-    if (!history) {
+    /* Function to refresh history */
+    function refreshHistory() {
+        try {
+            chrome.storage.local.get(["historyWebsites"]).then((res) => {
+                if (!res || res === null) {
+                    return null
+                }
+
+                const data: HistoryStore = JSON.parse(res.historyWebsites)
+                setHistory(data.data as HistoryItem[])
+                //Inject popup/toaster of error 
+                toast.success("Data was refreshed.")
+            });
+        } catch (err) {
+            //Inject popup/toaster of error 
+            toast.error("An error occured while refreshing history.", {
+                description: 'You can see the error in console',
+            })
+            console.log("🦈steamShark error: " + err)
+        }
+    }
+
+    if (!history || !settings) {
         return (
             <div>
                 <p>Error</p>
@@ -72,11 +108,15 @@ export default function History() {
             <div className="flex flex-row gap-5 w-full">
                 <Card className="w-1/3">
                     <CardHeader className="text-lg font-semibold">
-                        Total Scans
+                        Total History
                     </CardHeader>
                     <CardContent className="flex flex-col gap-5">
-                        <p className="text-3xl font-bold text-primary">5</p>
-                        <p className="text-sm text-muted-foreground">Today</p>
+                        <div className="flex flex-row items-center gap-2">
+                            <p className="text-3xl font-bold text-primary">{history.length}</p>
+                            <span className="text-sm text-white">/ {settings.maxHistoryEntries}</span>
+                        </div>
+
+                        <p className="text-sm text-muted-foreground">Items</p>
                     </CardContent>
                 </Card>
                 <Card className="w-1/3">
@@ -124,7 +164,7 @@ export default function History() {
                         {/* REMOVE HISTORY */}
                         <ResetHistoryConfirm onConfirm={resetHistory} />
 
-                        <Button variant="secondary" className="flex items-center gap-3 cursor-pointer">
+                        <Button variant="secondary" className="flex items-center gap-3 cursor-pointer" onClick={refreshHistory}>
                             <RefreshCw className="icon-primary w-5 h-5" />
                             <span>Refresh</span>
                         </Button>
@@ -139,8 +179,9 @@ export default function History() {
 
             {/* TABLE */}
             <Card>
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between">
                     <h3 className="text-xl font-bold">Recent Activity</h3>
+                    <p>A total of <span className="font-bold">{history.length}</span> out of <span className="font-bold">{settings.maxHistoryEntries}</span>.</p>
                 </CardHeader>
                 <CardContent>
                     {history === null || history.length === 0 ? (
@@ -161,34 +202,7 @@ export default function History() {
                             </TableHeader>
                             <TableBody>
 
-                                {history.map((item, index) => (
-                                    <TableRow key={index} className="w-full">
-                                        {/* STATUS */}
-                                        <TableCell className="w-1/6">
-                                            {/* <div className="flex items-center space-x-2">
-                                                {getStatusIcon(item.status)}
-                                                {getStatusBadge(item.status)}
-                                            </div> */}
-                                        </TableCell>
-                                        {/* WEBSITE */}
-                                        <TableCell className="w-3/6">
-                                            <span className="font-medium">{item.url}</span>
-                                        </TableCell>
-                                        {/* TIMESTAMP */}
-                                        <TableCell className="w-1/6">
-                                            <span className="text-muted-foreground">{item.timestamp}</span>
-                                        </TableCell>
-                                        {/* STEAMSHARK WWBSITE PAGE */}
-                                        <TableCell className="w-1/6">
-                                            <Button disabled variant="ghost" className="flex items-center gap-2 cursor-pointer hover:bg-background/50">
-                                                <Link to={`http://localhost:8080/website/${item.url}`}>{/* CHANGE AFTER TO THE ACTUAL WEBSITE */}
-                                                    <ExternalLink className="text-muted-foreground w-3 h-3" />
-                                                    <span className="text-sm text-muted-foreground">Details</span>
-                                                </Link>
-                                            </Button>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
+                                <HistoryDataTable history={history} />
                             </TableBody>
                         </Table>
                     )}

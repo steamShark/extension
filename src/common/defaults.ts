@@ -1,5 +1,8 @@
 import { HistoryStore, SettingsData, SettingsStore } from "./interfaces";
 
+/* Default history page size */
+export const HISTORY_PAGE_SIZE = 10;
+
 /* Default Settings Data */
 export const defaultSettings : SettingsData = {
     /* Refresh Lists */
