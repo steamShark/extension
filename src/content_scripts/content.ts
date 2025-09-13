@@ -2,7 +2,7 @@
 export { }; // ensure this file is treated as a module
 
 import { defaultSettingsStore } from "@/common/defaults";
-import { HistoryStore, PermittedStore, ScamStore, SettingsStore, TrustStore } from "../common/interfaces";
+import { HistoryStore, NotTrustedItem, NotTrustedStore, PermittedStore, SettingsStore, TrustedItem, TrustedStore } from "../common/interfaces";
 import { PopupSettings } from "../common/types";
 import { getStorageData } from "./utils";
 
@@ -11,19 +11,19 @@ const hasChrome: boolean =
   typeof globalThis !== "undefined" && "chrome" in globalThis;
 
 async function getDataFromLocal(): Promise<
-  [TrustStore, ScamStore, HistoryStore, SettingsStore, PermittedStore]
+  [TrustedStore, NotTrustedStore, HistoryStore, SettingsStore, PermittedStore]
 > {
   try {
     // Start all storage retrievals concurrently
     const [
       resultJSONTrust,
-      resultJSONScam,
+      resultJSONNotTrusted,
       resultJSONhistory,
       resultJSONsettings,
       resultJSONpermittedWebsites,
     ] = await Promise.all([
-      getStorageData<TrustStore>("trustWebsites", hasChrome),
-      getStorageData<ScamStore>("scamWebsites", hasChrome),
+      getStorageData<TrustedStore>("trustedWebsites", hasChrome),
+      getStorageData<NotTrustedStore>("notTrustedWebsites", hasChrome),
       getStorageData<HistoryStore>("historyWebsites", hasChrome),
       getStorageData<SettingsStore>("settings", hasChrome),
       getStorageData<PermittedStore>("permittedWebsites", hasChrome),
@@ -32,7 +32,7 @@ async function getDataFromLocal(): Promise<
     // Return the results
     return [
       resultJSONTrust,
-      resultJSONScam,
+      resultJSONNotTrusted,
       resultJSONhistory,
       resultJSONsettings,
       resultJSONpermittedWebsites,
@@ -62,44 +62,36 @@ async function getDataFromLocal(): Promise<
 
 //Main function
 async function verifyWebsite(
-  resultJSONTrust: TrustStore,
-  resultJSONScam: ScamStore,
+  resultJSONtrusted: TrustedStore,
+  resultJSONnotTrusted: NotTrustedStore,
   resultJSONsettings: SettingsStore,
   resultJSONpermittedWebsites: PermittedStore
 ) {
-  if (!hasChrome) return;
+  if (!hasChrome && !resultJSONtrusted && !resultJSONnotTrusted && !resultJSONsettings && !resultJSONpermittedWebsites) return;
 
-  //console.log(resultJSONScam); // This will log the data once it's available
-  //console.log(resultJSONTrust); // This will log the data once it's available
-  //console.log(resultJSONhistory); // This will log the data once it's available
-  //console.log(resultJSONsettings); // This will log the data once it's available
-  //console.log(resultJSONpermittedWebsites); // This will log the data once it's available
+  //Just to register what ASteamShark did on console
+  console.log("🦈steamShark started!");
 
-  console.log("🦈steamShark started!"); //Just to register what ASteamShark did on console
-
-  const url = window.location.href; //Get the url of the page
+  //Get the url of the page
+  const url = window.location.href;
   console.log("🦈steamShark: url is " + url);
 
-  /* let isLegit = true; */
-
-  // Remove the http and https for scam website list
-  const urlVerify = url
-    .replace("http://", "")
-    .replace("https://", "")
-    .replace("/", "");
+  //Create the objects to verify in the lists
+  const urlObject = new URL(url); // Make an URL object
+  const origin = urlObject.origin;
 
   //Check if the website is localhost
-  if (urlVerify.includes("localhost") || urlVerify.includes("127.0.0.1")) {
+  if (origin.includes("localhost") || origin.includes("127.0.0.1")) {
     return;
   }
 
-  //Create the objects to verify in trust list
-  const urlObject = new URL(url); // Make an URL object
-  const domain = urlObject.origin + "/"; // Get the origin of the url and add "/"
+  const notTrusted =
+    Array.isArray(resultJSONnotTrusted.data) &&
+    resultJSONnotTrusted.data.some((item: NotTrustedItem) => item.url === origin);
 
   // Verify if it's in the list of scam websites
-  if (Array.isArray(resultJSONScam.data) && resultJSONScam.data.includes(urlVerify)) {
-    console.log("🦈steamShark: The website is in the scam list!");
+  if (notTrusted) {
+    console.log("🦈steamShark: The website is in the not trusted list!");
     let isPermitted = false;
 
     //Register the website to the history
@@ -127,7 +119,7 @@ async function verifyWebsite(
         return;
       } else {
         console.log("🦈steamShark: Show scam popup!");
-        injectPopup(false, domain, {
+        injectPopup(false, origin, {
           popupPosition: resultJSONsettings.data.popupPosition,
           showPopUpInRepeatedTrustedWebsite:
             resultJSONsettings.data.showPopUpInRepeatedTrustedWebsite,
@@ -140,18 +132,23 @@ async function verifyWebsite(
 
   // Iterate through the data from the JSON to see if the URL is in the list
   const trusted =
-    Array.isArray(resultJSONTrust.data) &&
-    resultJSONTrust.data.some((item) => item.url === domain);
+    Array.isArray(resultJSONtrusted.data) &&
+    resultJSONtrusted.data.some((item : TrustedItem) => item.url === origin);
+
+    console.log(resultJSONtrusted.data.some((item : TrustedItem) => {
+      console.log(item.url, origin)
+      item.url === origin
+    }))
 
   // Verify if it's in the list of trustworthy websites
   if (trusted) {
-    console.log("The website is in the trust list.");
+    console.log("🦈steamShark: The website is in the trust list!");
 
     try {
       await chrome.runtime.sendMessage({ action: "registerHistoryStorage", trusted: true });
     } catch {/* ignore */ }
 
-    injectPopup(true, domain, {
+    injectPopup(true, origin, {
       popupPosition: resultJSONsettings.data.popupPosition,
       showPopUpInRepeatedTrustedWebsite:
         resultJSONsettings.data.showPopUpInRepeatedTrustedWebsite,

@@ -8,9 +8,9 @@ import {
 import { Button } from "../../components/ui/button";
 import { ExternalLink } from "lucide-react";
 import { LOCAL_DATABASE_TRUST_PAGE_SIZE } from "@/common/defaults";
-import { TrustItem } from "@/common/interfaces";
+import { TrustedItem } from "@/common/interfaces";
 
-export function LocalDatabaseTrustTable({ trustItems }: { trustItems: TrustItem[] }) {
+export function LocalDatabaseTrustTable({ trustItems }: { trustItems: TrustedItem[] }) {
     const [page, setPage] = useState(1);
 
     const pageCount = Math.max(1, Math.ceil(trustItems.length / LOCAL_DATABASE_TRUST_PAGE_SIZE));
@@ -47,7 +47,7 @@ export function LocalDatabaseTrustTable({ trustItems }: { trustItems: TrustItem[
                     {/* DETAILS */}
                     <TableCell className="w-1/6">
                         <Button disabled variant="ghost" className="flex items-center gap-2 cursor-pointer hover:bg-background/50">
-                            <Link to={`http://localhost:8080/website/${encodeURIComponent(item.url)}`}>
+                            <Link to={`http://localhost:8080/website/${encodeURIComponent(item.url.replace(/^https?:\/\//, ""))}`}>
                                 <ExternalLink className="text-muted-foreground w-3 h-3" />
                                 <span className="text-sm text-muted-foreground">Details</span>
                             </Link>

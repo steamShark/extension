@@ -2,16 +2,16 @@ import { WhereToLocate } from "./types";
 
 /* STORES */
 /*  */
-export interface TrustStore {
+export interface TrustedStore {
   description?: string;
-  data: TrustItem[];
+  data: TrustedItem[] | null;
   lastCheckup?: string;
 }
 
 /*  */
-export interface ScamStore {
+export interface NotTrustedStore {
   description?: string;
-  data: string[]; // you use includes(urlVerify)
+  data: NotTrustedItem[] | null;
   lastCheckup?: string;
 }
 
@@ -46,7 +46,12 @@ export interface PermittedItem {
   expiresAt?: number;
 }
 
-export interface TrustItem {
+export interface TrustedItem {
+  url: string;
+  description: string;
+}
+
+export interface NotTrustedItem {
   url: string;
   description: string;
 }

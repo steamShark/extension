@@ -8,17 +8,18 @@ import {
 import { Button } from "../../components/ui/button";
 import { ExternalLink } from "lucide-react";
 import { LOCAL_DATABASE_SCAM_PAGE_SIZE } from "@/common/defaults";
+import { NotTrustedItem } from "@/common/interfaces";
 
-export default function LocalDatabaseScamTable({ scamItems }: { scamItems: string[] }) {
+export default function LocalDatabaseNotTrustedTable({ notTrustedItems }: { notTrustedItems: NotTrustedItem[] }) {
     const [page, setPage] = useState(10);
 
-    const pageCount = Math.max(1, Math.ceil(scamItems.length / LOCAL_DATABASE_SCAM_PAGE_SIZE));
+    const pageCount = Math.max(1, Math.ceil(notTrustedItems.length / LOCAL_DATABASE_SCAM_PAGE_SIZE));
     const clampedPage = Math.min(page, pageCount);
 
     const pageItems = useMemo(() => {
         const start = (clampedPage - 1) * LOCAL_DATABASE_SCAM_PAGE_SIZE;
-        return scamItems.slice(start, start + LOCAL_DATABASE_SCAM_PAGE_SIZE);
-    }, [scamItems, clampedPage, LOCAL_DATABASE_SCAM_PAGE_SIZE]);
+        return notTrustedItems.slice(start, start + LOCAL_DATABASE_SCAM_PAGE_SIZE);
+    }, [notTrustedItems, clampedPage, LOCAL_DATABASE_SCAM_PAGE_SIZE]);
 
     // windowed page number list (max 5)
     const pageNumbers = useMemo(() => {
@@ -30,7 +31,7 @@ export default function LocalDatabaseScamTable({ scamItems }: { scamItems: strin
 
     const lastPageNumber = pageNumbers[pageNumbers.length - 1];
 
-    if (!scamItems.length) {
+    if (!notTrustedItems.length) {
         return (
             <tr>
                 <td colSpan={4} className="text-center py-8 text-sm text-muted-foreground">
@@ -47,17 +48,22 @@ export default function LocalDatabaseScamTable({ scamItems }: { scamItems: strin
                 <TableRow key={`${item}-${index}`} className="w-full">
                     {/* WEBSITE */}
                     <TableCell className="w-3/6">
-                        <span className="font-medium break-all">{item}</span>
+                        <span className="font-medium break-all">{item.url}</span>
+                    </TableCell>
+
+                    {/* DESCRIPTION */}
+                    <TableCell className="w-2/6">
+                        <span className="text-muted-foreground text-sm">{item.description}</span>
                     </TableCell>
 
                     {/* STEAMSHARK WEBSITE PAGE */}
                     <TableCell className="w-1/6">
                         <Button
-                            disabled
+                            
                             variant="ghost"
                             className="flex items-center gap-2 cursor-pointer hover:bg-background/50"
                         >
-                            <Link to={`http://localhost:8080/website/${encodeURIComponent(item)}`}>
+                            <Link to={`http://localhost:8080/website/${encodeURIComponent(item.url.replace(/^https?:\/\//, ""))}`}>
                                 <ExternalLink className="text-muted-foreground w-3 h-3" />
                                 <span className="text-sm text-muted-foreground">Details</span>
                             </Link>
@@ -124,7 +130,7 @@ export default function LocalDatabaseScamTable({ scamItems }: { scamItems: strin
                     </Pagination>
 
                     <p className="text-xs text-muted-foreground text-center mt-2">
-                        Showing {(clampedPage - 1) * LOCAL_DATABASE_SCAM_PAGE_SIZE + 1}–{Math.min(clampedPage * LOCAL_DATABASE_SCAM_PAGE_SIZE, scamItems.length)} of {scamItems.length}
+                        Showing {(clampedPage - 1) * LOCAL_DATABASE_SCAM_PAGE_SIZE + 1}–{Math.min(clampedPage * LOCAL_DATABASE_SCAM_PAGE_SIZE, notTrustedItems.length)} of {notTrustedItems.length}
                     </p>
                 </td>
             </tr>

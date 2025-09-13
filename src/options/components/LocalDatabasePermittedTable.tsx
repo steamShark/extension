@@ -74,7 +74,7 @@ export default function LocalDatabasePermittedable({ permittedItems, onRemove }:
                             variant="ghost"
                             className="flex items-center gap-2 cursor-pointer hover:bg-background/50"
                         >
-                            <Link to={`http://localhost:8080/website/${encodeURIComponent(item.url)}`}>
+                            <Link to={`http://localhost:8080/website/${encodeURIComponent(item.url.replace(/^https?:\/\//, ""))}`}>
                                 <ExternalLink className="text-muted-foreground w-3 h-3" />
                                 <span className="text-sm text-muted-foreground">Details</span>
                             </Link>

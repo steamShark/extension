@@ -51,8 +51,8 @@ export default function HistoryDataTable({ history }: { history: Array<{ url: st
 
                     {/* STEAMSHARK WEBSITE PAGE */}
                     <TableCell className="w-1/6">
-                        <Button variant="ghost" className="flex items-center gap-2 cursor-pointer hover:bg-background/50">
-                            <Link to={`http://localhost:8080/website/${encodeURIComponent(item.url)}`}>
+                        <Button disabled variant="ghost" className="flex items-center gap-2 cursor-pointer hover:bg-background/50">
+                            <Link to={`http://localhost:8080/website/${encodeURIComponent(item.url.replace(/^https?:\/\//, ""))}`}>
                                 <ExternalLink className="text-muted-foreground w-3 h-3" />
                                 <span className="text-sm text-muted-foreground">Details</span>
                             </Link>

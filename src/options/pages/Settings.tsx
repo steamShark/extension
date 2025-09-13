@@ -1,14 +1,14 @@
 import { BadgeAlert, History, PictureInPicture, Save, SettingsIcon } from "lucide-react";
 import "../styles/Settings.css"
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader } from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
-import { Input } from "../../components/ui/input"
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input"
 import { SettingsData } from "@/common/interfaces";
 import { defaultSettings, defaultSettingsStore } from "@/common/defaults";
 import { ResetSettingsConfirm } from "../components/ResetSettingsConfirm";
-import { Switch } from "../../components/ui/switch";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner"
 import { SettingsErrorState } from "../components/SettingsErrorLoadingPage";
 /* import { useChromeStorage } from "../hooks/useChromeStorage";

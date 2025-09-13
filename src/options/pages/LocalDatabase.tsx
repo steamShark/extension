@@ -6,16 +6,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Button } from "../../components/ui/button";
 import { categoryOptions, permittedActions, trustWorthyOptions } from "../interfaces";
 import { Table, TableBody, TableCaption, TableHead, TableHeader, TableRow } from "../../components/ui/table";
-import { PermittedItem, PermittedStore, ScamStore, TrustStore } from "@/common/interfaces";
-import LocalDatabaseScamTable from "../components/LocalDatabaseScamTable";
+import { NotTrustedStore, PermittedItem, PermittedStore, TrustedStore} from "@/common/interfaces";
+import LocalDatabaseNotTrustedTable from "../components/LocalDatabaseNotTrustedTable";
 import { LocalDatabaseTrustTable } from "../components/LocalDatabaseTrustTable";
 import { LocalDatabaseErrorState } from "../components/LocalDatabaseErrorLoadingPage";
 import LocalDatabasePermittedable from "../components/LocalDatabasePermittedTable";
 
 export default function WebsitesList() {
     /* GET FROM LOCAL STORAGE */
-    const [databaseScam, setDatabaseScam] = useState<ScamStore | null>(null);
-    const [databaseTrust, setDatabaseTrust] = useState<TrustStore | null>(null);
+    const [databaseNotTrusted, setDatabaseDatabaseNotTrusted] = useState<NotTrustedStore | null>(null);
+    const [databaseTrusted, setDatabaseTrusted] = useState<TrustedStore | null>(null);
     const [databasePermitted, setDatabasePermitted] = useState<PermittedStore | null>(null);
     /*const [pattern, setPattern] = useState(""); */
     const [searchTerm, setSearchTerm] = useState('');
@@ -27,22 +27,22 @@ export default function WebsitesList() {
     async function loadLocalDatabases() {
         setLoading(true);
         try {
-            chrome.storage.local.get(["scamWebsites"]).then((res) => {
-                if (res && res.scamWebsites) {
+            chrome.storage.local.get(["notTrustedWebsites"]).then((res) => {
+                if (res && res.notTrustedWebsites) {
                     try {
-                        const data: ScamStore = JSON.parse(res.scamWebsites);
-                        setDatabaseScam(data);
+                        const data: NotTrustedStore = JSON.parse(res.notTrustedWebsites);
+                        setDatabaseDatabaseNotTrusted(data);
                     } catch (e) {
                         console.error("Failed to parse trsut websites:", e);
                     }
                 }
             });
 
-            chrome.storage.local.get(["trustWebsites"]).then((res) => {
-                if (res && res.trustWebsites) {
+            chrome.storage.local.get(["trustedWebsites"]).then((res) => {
+                if (res && res.trustedWebsites) {
                     try {
-                        const data: TrustStore = JSON.parse(res.trustWebsites);
-                        setDatabaseTrust(data);
+                        const data: TrustedStore = JSON.parse(res.trustedWebsites);
+                        setDatabaseTrusted(data);
                     } catch (e) {
                         console.error("Failed to parse trsut websites:", e);
                     }
@@ -61,8 +61,8 @@ export default function WebsitesList() {
             });
         } catch (e) {
             console.error("Failed to load settings", e);
-            setDatabaseScam(null);
-            setDatabaseTrust(null);
+            setDatabaseDatabaseNotTrusted(null);
+            setDatabaseTrusted(null);
             setDatabasePermitted(null);
         } finally {
             setLoading(false);
@@ -81,7 +81,9 @@ export default function WebsitesList() {
         loadLocalDatabases();
     });
 
-    if (!databaseScam || !databaseTrust || !databasePermitted) {
+    console.log(databaseNotTrusted, databaseTrusted, databasePermitted)
+
+    if (!databaseNotTrusted || !databaseNotTrusted.data || !databaseTrusted || !databaseTrusted.data  || !databasePermitted) {
         return (
             <LocalDatabaseErrorState
                 onRetry={loadLocalDatabases}
@@ -112,9 +114,9 @@ export default function WebsitesList() {
     };
 
     const stats = {
-        total: databaseScam.data.length + databaseTrust.data.length,
-        safe: databaseTrust.data.length,
-        dangerous: databaseScam.data.length,
+        total: databaseNotTrusted.data.length + databaseTrusted.data.length,
+        safe: databaseTrusted.data.length,
+        dangerous: databaseNotTrusted.data.length,
     };
 
     return (
@@ -290,7 +292,7 @@ export default function WebsitesList() {
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <History className="icon-primary w-3 h-3" />
                             <p>Last Update:</p>
-                            {databaseTrust?.lastCheckup}
+                            {databaseTrusted?.lastCheckup}
                         </div>
                     </CardHeader>
                     <CardContent>
@@ -304,7 +306,7 @@ export default function WebsitesList() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                <LocalDatabaseTrustTable trustItems={databaseTrust.data} />
+                                <LocalDatabaseTrustTable trustItems={databaseTrusted.data} />
                             </TableBody>
                         </Table>
                     </CardContent>
@@ -320,7 +322,7 @@ export default function WebsitesList() {
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <History className="icon-primary w-3 h-3" />
                             <p>Last Update:</p>
-                            {databaseTrust?.lastCheckup}
+                            {databaseTrusted?.lastCheckup}
                         </div>
                     </CardHeader>
                     <CardContent>
@@ -329,11 +331,12 @@ export default function WebsitesList() {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Domain</TableHead>
+                                    <TableHead>Description</TableHead>
                                     <TableHead>Details</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                <LocalDatabaseScamTable scamItems={databaseScam.data} />
+                                <LocalDatabaseNotTrustedTable notTrustedItems={databaseNotTrusted.data} />
                             </TableBody>
                         </Table>
                     </CardContent>

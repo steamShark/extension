@@ -1,10 +1,11 @@
 /// <reference types="chrome" />
 
 import { defaultHistoryStore, defaultSettingsStore } from "@/common/defaults";
-import { HistoryStore, PermittedStore, ScamStore, SettingsStore, TrustStore } from "../common/interfaces";
+import { HistoryStore, NotTrustedStore, PermittedStore, SettingsStore, TrustedStore } from "../common/interfaces";
 import { getLocalJSON, setLocalJSON } from "./utils";
+import { apiGetResponse } from "@/common/apiResponses";
 
-export {}; // ensure this file is treated as a module
+export { }; // ensure this file is treated as a module
 
 /** ===================== Install bootstrap ===================== */
 /*
@@ -72,10 +73,15 @@ async function createHistory(): Promise<void> {
  * Fetch data from GitHub and store locally (with lastCheckup)
  */
 async function fetchDataAndStore(): Promise<void> {
-  const urls = [
+  /* const urls = [
     "https://raw.githubusercontent.com/Franciscoborges2002/steamShark/main/utils/scam.json",
     "https://raw.githubusercontent.com/Franciscoborges2002/steamShark/main/utils/trust.json",
-  ];
+  ]; */
+
+  const urls = [
+    "http://localhost:8800/api/v1/websites/extension?is_not_trusted=true",
+    "http://localhost:8800/api/v1/websites/extension?is_not_trusted=false"
+  ]
 
   // If you need current trust list for merging, read it here:
   // const currentTrust = await getLocalJSON<TrustStore>("trustWebsites");
@@ -83,22 +89,34 @@ async function fetchDataAndStore(): Promise<void> {
   for (const url of urls) {
     try {
       const response = await fetch(url);
-      const data = (await response.json()) as unknown;
+      const data = (await response.json()) as apiGetResponse;
 
       const enrichedData =
-        url.includes("scam")
-          ? ({ ...(data as ScamStore), lastCheckup: new Date().toISOString() } satisfies ScamStore)
-          : ({ ...(data as TrustStore), lastCheckup: new Date().toISOString() } satisfies TrustStore);
+        url.includes("is_not_trusted=true")
+          ? ({
+            data: Array.isArray((data as NotTrustedStore).data)
+              ? (data as NotTrustedStore).data
+              : null,
+            description: (data as NotTrustedStore).description,
+            lastCheckup: new Date().toISOString(),
+          } satisfies NotTrustedStore)
+          : ({
+            data: Array.isArray((data as TrustedStore).data)
+              ? (data as TrustedStore).data
+              : null,
+            description: (data as TrustedStore).description,
+            lastCheckup: new Date().toISOString(),
+          } satisfies TrustedStore);
 
-      if (url.includes("scam")) {
-        await setLocalJSON("scamWebsites", enrichedData);
+      if (url.includes("is_not_trusted=true")) {
+        console.log("not trusted ", enrichedData)
+        await setLocalJSON("notTrustedWebsites", enrichedData);
       } else {
-        await setLocalJSON("trustWebsites", enrichedData);
+        await setLocalJSON("trustedWebsites", enrichedData);
       }
 
       console.log(
-        `🦈steamShark[BG]: Data from ${url} stored successfully.`
-      );
+        `🦈steamShark[BG]: Data from ${url} stored successfully.`);
     } catch (error) {
       console.error(
         `🦈steamShark[BG]: Failed to fetch data from ${url}:`,
@@ -117,7 +135,7 @@ chrome.runtime.onMessage.addListener(
         | { action: "redirectWarningPage" }
         | { action: "registerHistoryStorage"; trusted: boolean }
         | { action: "fetchData" }
-        | { action: string; [k: string]: unknown };
+        | { action: string;[k: string]: unknown };
 
       /* Redirect the user to the scam alert page inside the extension */
       if (msg.action === "redirectWarningPage") {
@@ -180,7 +198,7 @@ chrome.runtime.onMessage.addListener(
           } catch (error) {
             console.log(
               "🦈steamShark[BG]: Error while saving into localStorage.\nError: " +
-                error
+              error
             );
             sendResponse(
               "🦈steamShark[BG]: Error while saving into localStorage!"
@@ -203,7 +221,7 @@ chrome.runtime.onMessage.addListener(
           data.length > 0 &&
           data[0].url === domain &&
           now.getTime() - new Date(data[0].timestamp).getTime() <
-            settings.data.historyRepeatEntryCooldownMs
+          settings.data.historyRepeatEntryCooldownMs
         ) {
           const minutes =
             settings.data.historyRepeatEntryCooldownMs / 60000;
@@ -234,7 +252,7 @@ chrome.runtime.onMessage.addListener(
         } catch (error) {
           console.log(
             "🦈steamShark[BG]: Error while saving into localStorage.\nError: " +
-              error
+            error
           );
           sendResponse({
             message:
