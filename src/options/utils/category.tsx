@@ -1,5 +1,5 @@
 import { AlertTriangle, Shield } from "lucide-react";
-import { Badge } from "../components/ui/badge";
+import { Badge } from "../../components/ui/badge";
 
 export const getCategoryBadge = (category: string) => {
     const variants = {

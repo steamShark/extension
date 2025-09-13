@@ -22,7 +22,10 @@ export default {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',
-				background: 'hsl(var(--background))',
+				background: {
+					DEFAULT: 'hsl(var(--background))',
+					warning: 'hsl(var(--warning-background))'
+				},
 				foreground: 'hsl(var(--foreground))',
 				success: 'hsl(var(--success))',
 				warning: 'hsl(var(--warning))',
@@ -74,7 +77,7 @@ export default {
 				icon: {
 					primary: 'hsl(var(--icon-primary))',
 				},
-				
+
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -131,7 +134,18 @@ export default {
 					'100%': {
 						transform: 'translateX(100px) rotate(5deg)'
 					}
-				}
+				},
+				// subtle scale/glow
+				'pulse-scale': {
+					'0%, 100%': { transform: 'scale(1)' },
+					'50%': { transform: 'scale(1.06)' },
+				},
+				// outward ripple ring
+				'pulse-ring': {
+					'0%': { transform: 'scale(1)', opacity: '0.45' },
+					'80%': { transform: 'scale(1.8)', opacity: '0' },
+					'100%': { opacity: '0' },
+				},
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
@@ -139,7 +153,9 @@ export default {
 				'fade-in': 'fade-in 0.5s ease-out',
 				float: 'float 3s ease-in-out infinite',
 				'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
-				'shark-swim': 'shark-swim 4s ease-in-out infinite alternate'
+				'shark-swim': 'shark-swim 4s ease-in-out infinite alternate',
+				'pulse-scale': 'pulse-scale 2s ease-in-out infinite',
+				'pulse-ring': 'pulse-ring 1.8s ease-out infinite',
 			}
 		}
 	},

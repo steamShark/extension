@@ -1,7 +1,9 @@
 import { HistoryStore, SettingsData, SettingsStore } from "./interfaces";
 
-/* Default history page size */
+/* Default page sizes */
 export const HISTORY_PAGE_SIZE = 10;
+export const LOCAL_DATABASE_SCAM_PAGE_SIZE = 10;
+export const LOCAL_DATABASE_TRUST_PAGE_SIZE = 10;
 
 /* Default Settings Data */
 export const defaultSettings : SettingsData = {
@@ -12,7 +14,7 @@ export const defaultSettings : SettingsData = {
     showPopUpInRepeatedTrustedWebsite: true,
     popupDurationMs: 10000,
     /* Scam alert Settings */
-    redirectOnScamDetected: true,
+    redirectToWarningPage: true,
     ignoreScamSiteDurationMs: 300000,
     /* History Settings */
     enableHistory: true,

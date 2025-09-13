@@ -1,7 +1,6 @@
 /// <reference types="chrome" />
 import { useMemo } from "react";
 import "./popup.css";
-import { Link } from "react-router";
 import { Database, History, Settings } from "lucide-react";
 import { Badge } from "./components/Badge";
 
@@ -15,13 +14,13 @@ const extUrl = (path: string) =>
 export default function Popup() {
     // Icon path from /public (works in extension build).
     // Fallback to absolute path for local preview.
-    const iconSrc = useMemo(
+    /* const iconSrc = useMemo(
         () =>
         (hasChrome
             ? chrome.runtime.getURL("logos/icon32.png")
             : "/logos/icon32.png"),
         []
-    );
+    ); */
 
     // Read version from manifest (fallback to hardcoded)
     const version = useMemo(() => {
@@ -46,7 +45,7 @@ export default function Popup() {
                 </div>
                 <h1>SteamShark</h1>
                 <div className="sub-header">
-                    <Badge text="v1.1.0" />
+                    <Badge text={version} />
                 </div>
             </header>
 

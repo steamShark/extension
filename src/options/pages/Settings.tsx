@@ -1,41 +1,57 @@
-import { BadgeAlert, History, PictureInPicture, RotateCcw, Save, SettingsIcon } from "lucide-react";
+import { BadgeAlert, History, PictureInPicture, Save, SettingsIcon } from "lucide-react";
 import "../styles/Settings.css"
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader } from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
-import { Input } from "../components/ui/input"
+import { Card, CardContent, CardHeader } from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
+import { Input } from "../../components/ui/input"
 import { SettingsData } from "@/common/interfaces";
 import { defaultSettings, defaultSettingsStore } from "@/common/defaults";
 import { ResetSettingsConfirm } from "../components/ResetSettingsConfirm";
+import { Switch } from "../../components/ui/switch";
+import { toast } from "sonner"
+import { SettingsErrorState } from "../components/SettingsErrorLoadingPage";
 /* import { useChromeStorage } from "../hooks/useChromeStorage";
 import { SettingsData } from "../../common/interfaces"; */
 
 const clamp = (n: number, min: number, max: number) => Math.min(Math.max(n, min), max);
 
 export default function Settings() {
-    const [settings, setSettings] = useState<SettingsData>(defaultSettings);
+    const [settings, setSettings] = useState<SettingsData | null>(null);
+    const [loading, setLoading] = useState<boolean>(false);
+
+    async function loadSettings() {
+        setLoading(true);
+        try {
+            chrome.storage.local.get(["settings"]).then((res) => {
+                if (res && res.settings) {
+                    try {
+                        const data: SettingsData = JSON.parse(res.settings).data;
+                        setSettings(data);
+                    } catch (e) {
+                        console.error("Failed to parse settings:", e);
+                    }
+                }
+            });
+        } catch (e) {
+            console.error("Failed to load settings", e);
+            setSettings(null);
+        } finally {
+            setLoading(false);
+        }
+    }
 
     /* Get Settings from localstorage */
     useEffect(() => {
-        chrome.storage.local.get(["settings"]).then((res) => {
-            if (res && res.settings) {
-                try {
-                    const data: SettingsData = JSON.parse(res.settings).data;
-                    setSettings(data);
-                } catch (e) {
-                    console.error("Failed to parse settings:", e);
-                }
-            }
-        });
+        loadSettings()
     }, []);
 
     /* Funtion to handle with input changes, only in useState object, not in extension local storage settings */
-    const handleInputChange = (key: keyof SettingsData, value: string | number | boolean) => {
-        setSettings((prev) => ({
-            ...prev,
-            [key]: value,
-        }));
+    const handleInputChange = <K extends keyof SettingsData>(
+        key: K,
+        value: SettingsData[K]
+    ) => {
+        setSettings(prev => (prev ? { ...prev, [key]: value } : prev));
     };
 
     /* Function to handling with saving the settings */
@@ -45,10 +61,13 @@ export default function Settings() {
                 settings: JSON.stringify({ data: settings }),
             });
             //Inject popup/toaster of success
-            alert("settings saved")
+            toast.success("Settings were saved!")
         } catch (err) {
             //Inject popup/toaster of error 
-            alert("error")
+            toast.error("An error occured while saving settings.", {
+                description: 'You can see the error in console',
+            })
+            console.log("🦈steamShark error: " + err)
         }
 
         console.log("Settings saved:", settings);
@@ -75,13 +94,13 @@ export default function Settings() {
     /* If the settings were not obtained from the extension local storage */
     if (!settings) {
         return (
-            <div>
-                Error
-            </div>
-        )
+            <SettingsErrorState
+                onRetry={loadSettings}
+                onUseDefaults={() => setSettings(defaultSettings)}
+                showLoading={loading}
+            />
+        );
     }
-
-    console.log(settings)
 
     return (
         <section className="container flex flex-col gap-5">
@@ -119,7 +138,9 @@ export default function Settings() {
 
                     <div className="settings-group-row">
                         <label>Popup position</label>
-                        <Select onValueChange={(e) => handleInputChange("popupPosition", e)}>
+                        <Select onValueChange={(val) =>
+                            handleInputChange("popupPosition", val as SettingsData["popupPosition"])
+                        }>
                             <SelectTrigger className="bg-background">
                                 <SelectValue placeholder={settings.popupPosition} />
                             </SelectTrigger>
@@ -174,6 +195,32 @@ export default function Settings() {
                 </CardHeader>
 
                 <CardContent className="flex flex-col items-start gap-5">
+                    <div className="settings-group-row flex items-center gap-4">
+                        <p
+                            className={`cursor-pointer px-2 py-1 rounded-md text-sm transition-colors ${!settings.redirectToWarningPage
+                                ? "bg-primary text-primary-foreground font-medium"
+                                : "text-muted-foreground"
+                                }`}
+                            onClick={() => handleInputChange("redirectToWarningPage", false)}
+                        >
+                            Only show warning popup
+                        </p>
+
+                        <Switch
+                            checked={settings.redirectToWarningPage}
+                            onCheckedChange={(checked) => handleInputChange("redirectToWarningPage", checked)}
+                        />
+
+                        <p
+                            className={`cursor-pointer px-2 py-1 rounded-md text-sm transition-colors ${settings.redirectToWarningPage
+                                ? "bg-primary text-primary-foreground font-medium"
+                                : "text-muted-foreground"
+                                }`}
+                            onClick={() => handleInputChange("redirectToWarningPage", true)}
+                        >
+                            Redirect to warning page
+                        </p>
+                    </div>
                     <div className="settings-group-col">
                         <label>How much time to ingnore scam website</label>
                         <div className="time-input">

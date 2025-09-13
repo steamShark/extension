@@ -48,6 +48,7 @@ export interface PermittedItem {
 
 export interface TrustItem {
   url: string;
+  description: string;
 }
 
 /* data */
@@ -60,7 +61,7 @@ export interface SettingsData {
   showPopUpInRepeatedTrustedWebsite: boolean;// default: true
   popupDurationMs: number; // ms, default: 10000 (10s)
   /* Scam alert Settings */
-  redirectOnScamDetected: boolean; //default: true
+  redirectToWarningPage: boolean; //default: true
   ignoreScamSiteDurationMs: number; // ms, default:  300000 (5mins)
   /* History Settings */
   enableHistory: boolean; //default: true

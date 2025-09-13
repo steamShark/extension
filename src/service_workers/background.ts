@@ -1,6 +1,6 @@
 /// <reference types="chrome" />
 
-import { defaultHistoryStore, defaultSettings, defaultSettingsStore } from "@/common/defaults";
+import { defaultHistoryStore, defaultSettingsStore } from "@/common/defaults";
 import { HistoryStore, PermittedStore, ScamStore, SettingsStore, TrustStore } from "../common/interfaces";
 import { getLocalJSON, setLocalJSON } from "./utils";
 
@@ -122,7 +122,7 @@ chrome.runtime.onMessage.addListener(
       /* Redirect the user to the scam alert page inside the extension */
       if (msg.action === "redirectWarningPage") {
         const extensionId = chrome.runtime.id;
-        const warningPageUrl = `chrome-extension://${extensionId}/src/warning.html`;
+        const warningPageUrl = `chrome-extension://${extensionId}/src/warning/index.html`;
         const tabId = sender.tab?.id;
         if (tabId != null) {
           await chrome.tabs.update(tabId, { url: warningPageUrl });

@@ -1,6 +1,7 @@
 /// <reference types="chrome" />
 export { }; // ensure this file is treated as a module
 
+import { defaultSettingsStore } from "@/common/defaults";
 import { HistoryStore, PermittedStore, ScamStore, SettingsStore, TrustStore } from "../common/interfaces";
 import { PopupSettings } from "../common/types";
 import { getStorageData } from "./utils";
@@ -40,18 +41,7 @@ async function getDataFromLocal(): Promise<
     console.error("Error retrieving data:", error);
 
     // Try to fetch settings so we can still show a meaningful popup, have defaults
-    let fallbackSettings: SettingsStore = {
-      description: "Settings used by SteamShark.",
-      data: {
-        howManyTimeIgnoreScamWebsite: 300_000, // 5 minutes
-        howManyRegisterInHistory: 50,
-        howManyTimeRegisterRepeatedWebsiteInHistory: 60_000, // 60 seconds
-        showPopUpInRepeatedTrustedWebsite: true,
-        whereToLocatePopup: "tr",
-        howManyTimeShowPopup: 10_000, // 10 seconds
-        redirectToWarningPage: true,
-      },
-    };
+    let fallbackSettings: SettingsStore = defaultSettingsStore;
 
     try {
       const s = await getStorageData<SettingsStore>("settings", hasChrome);
@@ -60,10 +50,10 @@ async function getDataFromLocal(): Promise<
       /* ignore, keep defaults */
     }
     injectPopup("error", "getting the data from storage", {
-      whereToLocatePopup: fallbackSettings.data.whereToLocatePopup,
+      popupPosition: fallbackSettings.data.popupPosition,
       showPopUpInRepeatedTrustedWebsite:
         fallbackSettings.data.showPopUpInRepeatedTrustedWebsite,
-      howManyTimeShowPopup: fallbackSettings.data.howManyTimeShowPopup,
+      popupDurationMs: fallbackSettings.data.popupDurationMs,
     });
 
     throw error; // rethrow so callers can handle if they want
@@ -138,10 +128,10 @@ async function verifyWebsite(
       } else {
         console.log("🦈steamShark: Show scam popup!");
         injectPopup(false, domain, {
-          whereToLocatePopup: resultJSONsettings.data.whereToLocatePopup,
+          popupPosition: resultJSONsettings.data.popupPosition,
           showPopUpInRepeatedTrustedWebsite:
             resultJSONsettings.data.showPopUpInRepeatedTrustedWebsite,
-          howManyTimeShowPopup: resultJSONsettings.data.howManyTimeShowPopup,
+          popupDurationMs: resultJSONsettings.data.popupDurationMs,
         });
       }
     }
@@ -162,10 +152,10 @@ async function verifyWebsite(
     } catch {/* ignore */ }
 
     injectPopup(true, domain, {
-      whereToLocatePopup: resultJSONsettings.data.whereToLocatePopup,
+      popupPosition: resultJSONsettings.data.popupPosition,
       showPopUpInRepeatedTrustedWebsite:
         resultJSONsettings.data.showPopUpInRepeatedTrustedWebsite,
-      howManyTimeShowPopup: resultJSONsettings.data.howManyTimeShowPopup,
+      popupDurationMs: resultJSONsettings.data.popupDurationMs,
     });
   }
 
@@ -284,7 +274,7 @@ function injectPopup(
   newDiv.style.alignItems = "center";
 
   /* Change the position of the popup */
-  switch (popupSettings.whereToLocatePopup) {
+  switch (popupSettings.popupPosition) {
     case "tr":
       newDiv.style.top = "4rem";
       newDiv.style.right = "1rem";
@@ -316,7 +306,7 @@ function injectPopup(
     if (popupToRemove) {
       popupToRemove.remove();
     }
-  }, popupSettings.howManyTimeShowPopup); // 10000 milliseconds = 10 seconds
+  }, popupSettings.popupDurationMs); // 10000 milliseconds = 10 seconds
 }
 
 /* 

@@ -2,7 +2,7 @@ import { Link, NavLink, useLocation } from "react-router-dom";
 import "./styles/header.css";
 import { History, Settings, Database } from 'lucide-react';
 import { SiGithub } from '@icons-pack/react-simple-icons';
-import { Button } from "./ui/button";
+import { Button } from "../../components/ui/button";
 
 export default function Header() {
   const location = useLocation();

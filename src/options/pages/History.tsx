@@ -1,46 +1,77 @@
 import { CircleOff, Download, Funnel, HistoryIcon, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader } from "../components/ui/card";
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/options/components/ui/table";
-import { Button } from "../components/ui/button";
+import { Card, CardContent, CardHeader } from "../../components/ui/card";
+import { Table, TableBody, TableCaption, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "../../components/ui/button";
 import { HistoryItem, HistoryStore, SettingsData } from "@/common/interfaces";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { trustWorthyOptions } from "../interfaces";
 import { ResetHistoryConfirm } from "../components/ResetHistoryConfirm";
 import { defaultHistoryStore } from "@/common/defaults";
 import { toast } from "sonner"
 import HistoryDataTable from "../components/HistoryDataTable";
+import { HistoryErrorState } from "../components/HistoryErrorLoadingPage";
 
 export default function History() {
-    const [history, setHistory] = useState<HistoryItem[]>([]);
+    const [history, setHistory] = useState<HistoryItem[] | null>(null);
     const [settings, setSettings] = useState<SettingsData | null>(null);
     /* FILTERS AND ACTIONS */
     const [selectedTrustWorthy, setSelectedTrustWorthy] = useState<string>('all');
+    const [loading, setLoading] = useState<boolean>(false);
+
+    async function loadHistory() {
+        setLoading(true);
+        try {
+            await chrome.storage.local.get(["settings"]).then((res) => {
+                if (res && res.settings) {
+                    try {
+                        /* GET HISTORY */
+                        chrome.storage.local.get(["historyWebsites"]).then((res) => {
+                            if (res && res.settings) {
+                                try {
+                                    const data: HistoryStore = JSON.parse(res.historyWebsites)
+                                    setHistory(data.data as HistoryItem[])
+                                    return data.data as HistoryItem[]
+                                } catch (e) {
+                                    console.error("Failed to parse settings:", e);
+                                }
+                            }
+
+
+                        });
+
+                        /* GET SETTINGS */
+                        chrome.storage.local.get(["settings"]).then((res) => {
+                            if (res && res.settings) {
+                                try {
+                                    const data: SettingsData = JSON.parse(res.settings).data;
+                                    setSettings(data);
+                                } catch (e) {
+                                    console.error("Failed to parse settings:", e);
+                                }
+                            }
+                        });
+                    } catch (e) {
+                        console.error("Failed to parse settings:", e);
+                    }
+                }
+            });
+        } catch (e) {
+            console.error("Failed to load settings", e);
+            setHistory(null);
+            setSettings(null);
+        } finally {
+            setLoading(false);
+        }
+    }
 
     /* Get Settings from localstorage */
     useEffect(() => {
         /* Get history */
-        chrome.storage.local.get(["historyWebsites"]).then((res) => {
-            if (!res || res === null) {
-                return null
-            }
 
-            const data: HistoryStore = JSON.parse(res.historyWebsites)
-            setHistory(data.data as HistoryItem[])
-            return data.data as HistoryItem[]
-        });
 
         /* Get settings */
-        chrome.storage.local.get(["settings"]).then((res) => {
-            if (res && res.settings) {
-                try {
-                    const data: SettingsData = JSON.parse(res.settings).data;
-                    setSettings(data);
-                } catch (e) {
-                    console.error("Failed to parse settings:", e);
-                }
-            }
-        });
+
     }, []);
 
     /* Function that is responsible to reset the History */
@@ -84,12 +115,13 @@ export default function History() {
         }
     }
 
-    if (!history || !settings) {
+    if (history === null || !settings) {
         return (
-            <div>
-                <p>Error</p>
-            </div>
-        )
+            <HistoryErrorState
+                onRetry={loadHistory}
+                showLoading={loading}
+            />
+        );
     }
 
     return (
