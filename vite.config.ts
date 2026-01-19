@@ -8,6 +8,7 @@ export default defineConfig({
   plugins: [react(), webExtension({
     additionalInputs: [
       "src/warning/index.html", //To vite process the page
+      "src/popup/index.html", // <— tell Vite this is an entry
     ],
   }), tailwindcss()],
   resolve: {

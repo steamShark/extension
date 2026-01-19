@@ -43,7 +43,8 @@ export interface HistoryItem {
 export interface PermittedItem {
   url: string;
   /** optional expiry timestamp (ms since epoch) */
-  expiresAt?: number;
+  action: string;
+  expiresAt: number;
 }
 
 export interface TrustedItem {

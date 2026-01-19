@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [1.1] - 2025
+## [2.0.0] - 2025
 
 ### Added
 
@@ -31,13 +31,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - [SS-Extension](https://github.com/steamShark/extension/commit/0c2386c482e00af0dbc73182a87d26e4d6fe128a)
   From monorepo into the enterprise repository
 
-## [1.0.1] - 2025
+## [1.0.1] - 23/02/2025
 
 ### Fixed
 
 - Links in several parts of the extension
 
-## [1.0.0] - 2025
+## [1.0.0] - 20/02/2025
 
 ### Added
 

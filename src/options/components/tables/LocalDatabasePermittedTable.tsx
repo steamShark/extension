@@ -1,25 +1,30 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { TableRow, TableCell } from "../../components/ui/table";
+import { TableRow, TableCell } from "../../../components/ui/table";
 import {
     Pagination, PaginationContent, PaginationItem,
     PaginationPrevious, PaginationNext, PaginationLink, PaginationEllipsis,
-} from "../../components/ui/pagination";
-import { Button } from "../../components/ui/button";
-import { ExternalLink } from "lucide-react";
+} from "../../../components/ui/pagination";
+import { Button } from "../../../components/ui/button";
+import { ExternalLink, Trash2 } from "lucide-react";
 import { LOCAL_DATABASE_SCAM_PAGE_SIZE } from "@/common/defaults";
-import { NotTrustedItem } from "@/common/interfaces";
+import { PermittedItem } from "@/common/interfaces";
 
-export default function LocalDatabaseNotTrustedTable({ notTrustedItems }: { notTrustedItems: NotTrustedItem[] }) {
+type PermittedTableProps = {
+    permittedItems: PermittedItem[];
+    onRemove: (item: PermittedItem) => void | Promise<void>;
+};
+
+export default function LocalDatabasePermittedTable({ permittedItems, onRemove }: PermittedTableProps) {
     const [page, setPage] = useState(10);
 
-    const pageCount = Math.max(1, Math.ceil(notTrustedItems.length / LOCAL_DATABASE_SCAM_PAGE_SIZE));
+    const pageCount = Math.max(1, Math.ceil(permittedItems.length / LOCAL_DATABASE_SCAM_PAGE_SIZE));
     const clampedPage = Math.min(page, pageCount);
 
     const pageItems = useMemo(() => {
         const start = (clampedPage - 1) * LOCAL_DATABASE_SCAM_PAGE_SIZE;
-        return notTrustedItems.slice(start, start + LOCAL_DATABASE_SCAM_PAGE_SIZE);
-    }, [notTrustedItems, clampedPage, LOCAL_DATABASE_SCAM_PAGE_SIZE]);
+        return permittedItems.slice(start, start + LOCAL_DATABASE_SCAM_PAGE_SIZE);
+    }, [permittedItems, clampedPage, LOCAL_DATABASE_SCAM_PAGE_SIZE]);
 
     // windowed page number list (max 5)
     const pageNumbers = useMemo(() => {
@@ -31,7 +36,7 @@ export default function LocalDatabaseNotTrustedTable({ notTrustedItems }: { notT
 
     const lastPageNumber = pageNumbers[pageNumbers.length - 1];
 
-    if (!notTrustedItems.length) {
+    if (!permittedItems.length) {
         return (
             <tr>
                 <td colSpan={4} className="text-center py-8 text-sm text-muted-foreground">
@@ -51,22 +56,44 @@ export default function LocalDatabaseNotTrustedTable({ notTrustedItems }: { notT
                         <span className="font-medium break-all">{item.url}</span>
                     </TableCell>
 
-                    {/* DESCRIPTION */}
-                    <TableCell className="w-2/6">
-                        <span className="text-muted-foreground text-sm">{item.description}</span>
+                    <TableCell className="w-3/6">
+                        <span className="font-medium break-all">{item.action}</span>
+                    </TableCell>
+
+                    {/* EXPIRES AT */}
+                    <TableCell className="w-3/6">
+                        <span className="font-medium">
+                            {(() => {
+                                const n = Number(item.expiresAt);
+                                const ms = n > 1e12 ? n : n * 1000;
+                                return new Date(ms).toLocaleString();
+                            })()}
+                        </span>
                     </TableCell>
 
                     {/* STEAMSHARK WEBSITE PAGE */}
                     <TableCell className="w-1/6">
                         <Button
-                            
                             variant="ghost"
                             className="flex items-center gap-2 cursor-pointer hover:bg-background/50"
                         >
-                            <Link to={`http://localhost:8080/website/${encodeURIComponent(item.url.replace(/^https?:\/\//, ""))}`}>
+                            <Link to={`http://localhost:8080/website/${encodeURIComponent(item.url.replace(/^https?:\/\//, ""))}`} target="_blank">
                                 <ExternalLink className="text-muted-foreground w-3 h-3" />
                                 <span className="text-sm text-muted-foreground">Details</span>
                             </Link>
+                        </Button>
+                    </TableCell>
+
+                    {/* ACTIONS */}
+                    <TableCell className="w-1/6">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => onRemove(item)}
+                            title="Remove"
+                            aria-label={`Remove ${item.url}`}
+                        >
+                            <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                     </TableCell>
                 </TableRow>
@@ -130,7 +157,7 @@ export default function LocalDatabaseNotTrustedTable({ notTrustedItems }: { notT
                     </Pagination>
 
                     <p className="text-xs text-muted-foreground text-center mt-2">
-                        Showing {(clampedPage - 1) * LOCAL_DATABASE_SCAM_PAGE_SIZE + 1}–{Math.min(clampedPage * LOCAL_DATABASE_SCAM_PAGE_SIZE, notTrustedItems.length)} of {notTrustedItems.length}
+                        Showing {(clampedPage - 1) * LOCAL_DATABASE_SCAM_PAGE_SIZE + 1}–{Math.min(clampedPage * LOCAL_DATABASE_SCAM_PAGE_SIZE, permittedItems.length)} of {permittedItems.length}
                     </p>
                 </td>
             </tr>

@@ -1,8 +1,8 @@
 // ResetConfirm.tsx
 import { useState } from "react";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../../components/ui/alert-dialog";
-import { Button } from "../../components/ui/button";
-import { Trash2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../../../components/ui/alert-dialog";
+import { Button } from "../../../components/ui/button";
+import { RotateCcw } from "lucide-react";
 
 type Props = {
     onConfirm: () => void;
@@ -11,7 +11,7 @@ type Props = {
 /* 
 Component responsible to reset settings
 */
-export function ResetHistoryConfirm({ onConfirm }: Props) {
+export function ResetSettingsConfirm({ onConfirm }: Props) {
     const [open, setOpen] = useState(false);
 
     const handleConfirm = () => {
@@ -28,21 +28,21 @@ export function ResetHistoryConfirm({ onConfirm }: Props) {
                     variant="destructive"
                     className="flex items-center space-x-2 cursor-pointer"
                 >
-                    <Trash2 size={18} />
-                    <span>Remove</span>
+                    <RotateCcw size={18} />
+                    <span>Reset to Defaults</span>
                 </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Remove History?</AlertDialogTitle>
+                    <AlertDialogTitle>Reset settings?</AlertDialogTitle>
                     <AlertDialogDescription>
-                        This will remove all registered history in local storage.
+                        This will restore all options to their default values. You can’t undo this action.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogCancel className="hover:bg-muted-foreground cursor-pointer">Cancel</AlertDialogCancel>
                     <AlertDialogAction className="bg-destructive hover:bg-destructive/50 cursor-pointer" onClick={handleConfirm}>
-                        Yes, remove
+                        Yes, reset
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>

@@ -15,7 +15,7 @@ export default function App() {
 
             <main className="app-main">
                 <Routes>
-                    <Route path="/" element={<Navigate to="/settings" replace />} />
+                    <Route path="/" element={<Navigate to="/database" replace />} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/history" element={<History />} />
                     <Route path="/database" element={<WebsitesList />} />

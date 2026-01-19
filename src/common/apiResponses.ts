@@ -1,7 +1,7 @@
-import { NotTrustItem } from "./interfaces";
+import { NotTrustedItem } from "./interfaces";
 
 export interface apiGetResponse{
     status: string;
     timestamp: string;
-    data: NotTrustItem[];
+    data: NotTrustedItem[];
 }

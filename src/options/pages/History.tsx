@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button";
 import { HistoryItem, HistoryStore, SettingsData } from "@/common/interfaces";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { trustWorthyOptions } from "../interfaces";
-import { ResetHistoryConfirm } from "../components/ResetHistoryConfirm";
+import { ResetHistoryConfirm } from "../components/resetConfirms/ResetHistoryConfirm";
 import { defaultHistoryStore } from "@/common/defaults";
 import { toast } from "sonner"
-import HistoryDataTable from "../components/HistoryDataTable";
-import { HistoryErrorState } from "../components/HistoryErrorLoadingPage";
+import HistoryDataTable from "../components/tables/HistoryDataTable";
+import { HistoryErrorState } from "../components/errorLoadingPages/HistoryErrorLoadingPage";
 
 export default function History() {
     const [history, setHistory] = useState<HistoryItem[] | null>(null);
@@ -152,7 +152,7 @@ export default function History() {
                 </Card>
                 <Card className="w-1/3">
                     <CardHeader className="text-lg font-semibold">
-                        Threads Blocked
+                        Threats Blocked
                     </CardHeader>
                     <CardContent className="flex flex-col gap-5">
                         <p className="text-3xl font-bold text-destructive">5</p>

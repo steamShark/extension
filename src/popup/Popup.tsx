@@ -29,7 +29,7 @@ export default function Popup() {
         } catch {
             /* ignore */
         }
-        return "v1.1.0";
+        return "v2.0.0";
     }, []);
 
     const settingsHref = extUrl("src/options/index.html#/settings");

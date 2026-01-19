@@ -7,10 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input"
 import { SettingsData } from "@/common/interfaces";
 import { defaultSettings, defaultSettingsStore } from "@/common/defaults";
-import { ResetSettingsConfirm } from "../components/ResetSettingsConfirm";
+import { ResetSettingsConfirm } from "../components/resetConfirms/ResetSettingsConfirm";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner"
-import { SettingsErrorState } from "../components/SettingsErrorLoadingPage";
+import { SettingsErrorState } from "../components/errorLoadingPages/SettingsErrorLoadingPage";
 /* import { useChromeStorage } from "../hooks/useChromeStorage";
 import { SettingsData } from "../../common/interfaces"; */
 

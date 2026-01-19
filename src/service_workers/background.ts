@@ -1,7 +1,7 @@
 /// <reference types="chrome" />
 
 import { defaultHistoryStore, defaultSettingsStore } from "@/common/defaults";
-import { HistoryStore, NotTrustedStore, PermittedStore, SettingsStore, TrustedStore } from "../common/interfaces";
+import { HistoryStore, NotTrustedStore, PermittedItem, PermittedStore, SettingsStore, TrustedStore } from "../common/interfaces";
 import { getLocalJSON, setLocalJSON } from "./utils";
 import { apiGetResponse } from "@/common/apiResponses";
 
@@ -133,12 +133,14 @@ chrome.runtime.onMessage.addListener(
     (async () => {
       const msg = request as
         | { action: "redirectWarningPage" }
-        | { action: "registerHistoryStorage"; trusted: boolean }
+        | { action: "registerHistoryStorage"; trusted?: boolean }
+        | { action: "registerHistoryStorage" }
         | { action: "fetchData" }
         | { action: string;[k: string]: unknown };
 
       /* Redirect the user to the scam alert page inside the extension */
       if (msg.action === "redirectWarningPage") {
+        console.log("🦈steamShark[BG]: Redirecting from warning page");
         const extensionId = chrome.runtime.id;
         const warningPageUrl = `chrome-extension://${extensionId}/src/warning/index.html`;
         const tabId = sender.tab?.id;
@@ -173,8 +175,13 @@ chrome.runtime.onMessage.addListener(
         }
 
         // If trusted, normalize to https://domain/ to match trust list format
-        if (msg.trusted) {
+        if ("trusted" in msg && msg.trusted) {
           domain = `https://${domain}/`;
+        }else{
+          sendResponse(
+            "🦈steamShark[BG]: Trustworthiness was not provided; cannot properly register in history."
+          );
+          return;
         }
 
         let history = await getLocalJSON<HistoryStore>("historyWebsites");
@@ -276,6 +283,70 @@ chrome.runtime.onMessage.addListener(
           sendResponse("🦈steamShark[BG]: Failed to fetch and store data!");
         }
         return;
+      }
+
+      /* Register the website in history */
+      if (msg.action === "registerHistoryStorage") {
+        console.log("🦈steamShark[BG]: Removing Website from permitted list!");
+
+        // Parse URL
+        let domain = "";
+        try {
+          const parsedUrl = new URL(sender.url ?? "");
+          domain = parsedUrl.hostname;
+        } catch {
+          sendResponse({
+            message: "🦈steamShark[BG]: Invalid URL.",
+          });
+          return;
+        }
+
+        // Remove subdomain
+        if (domain.includes(".")) {
+          domain = domain.split(".").slice(-2).join(".");
+        }
+
+        //Get both stores that are needed
+        let permittedStore = await getLocalJSON<PermittedStore>("permittedWebsites");
+
+        if (!permittedStore || permittedStore === undefined) {
+          sendResponse({
+            message: "🦈steamShark[BG]: Couldn't get the permittedStore.",
+          });
+          return;
+        }
+
+        //verify if there is any record 
+        const permittedItem = permittedStore.data.filter((item) => item.url === domain);
+
+        //Verify if item exists
+        if (permittedItem.length < 1) {
+          sendResponse({
+            message: "🦈steamShark[BG]: Item does not exist.",
+          });
+          return;
+        }
+
+        //Get the index of the item to remove it
+        const indexOfPermittedItem = permittedStore.data.indexOf(permittedItem[0])
+
+        //Verify if item exists
+        if (indexOfPermittedItem < 0) {
+          sendResponse({
+            message: "🦈steamShark[BG]: Couldn't get the item from the array.",
+          });
+          return;
+        }
+
+        const nextPermittedData: PermittedItem[] = permittedStore.data.splice(indexOfPermittedItem)
+
+        permittedStore.data = nextPermittedData;
+
+        try {
+          await chrome.storage.local.set({ permittedWebsites: JSON.stringify(permittedStore) });
+        } catch (err) {
+          console.log("error " + err)
+        }
       }
 
       // Unknown action

@@ -1,16 +1,16 @@
-import { CircleCheck, Database, Download, Funnel, History, RefreshCw, Search } from "lucide-react";
+import { Database, Download, Funnel, History, RefreshCw, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Card, CardHeader, CardContent } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { Button } from "../../components/ui/button";
-import { categoryOptions, permittedActions, trustWorthyOptions } from "../interfaces";
+import { categoryOptions, trustWorthyOptions } from "../interfaces";
 import { Table, TableBody, TableCaption, TableHead, TableHeader, TableRow } from "../../components/ui/table";
-import { NotTrustedStore, PermittedItem, PermittedStore, TrustedStore} from "@/common/interfaces";
-import LocalDatabaseNotTrustedTable from "../components/LocalDatabaseNotTrustedTable";
-import { LocalDatabaseTrustTable } from "../components/LocalDatabaseTrustTable";
-import { LocalDatabaseErrorState } from "../components/LocalDatabaseErrorLoadingPage";
-import LocalDatabasePermittedable from "../components/LocalDatabasePermittedTable";
+import { NotTrustedStore, PermittedItem, PermittedStore, TrustedStore } from "@/common/interfaces";
+import LocalDatabaseNotTrustedTable from "../components/tables/LocalDatabaseNotTrustedTable";
+import { LocalDatabaseTrustTable } from "../components/tables/LocalDatabaseTrustTable";
+import { LocalDatabaseErrorState } from "../components/errorLoadingPages/LocalDatabaseErrorLoadingPage";
+import LocalDatabasePermittedSection from "../components/LocalDatabasePermittedSection";
 
 export default function WebsitesList() {
     /* GET FROM LOCAL STORAGE */
@@ -21,6 +21,8 @@ export default function WebsitesList() {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [selectedTrustWorthy, setSelectedTrustWorthy] = useState<string>('all');
+    const [permittedWebsite, setPermittedWebsite] = useState<string>('');
+    const [expirationDate, setExpirationDate] = useState<string>("");
     const [permittedAction, setPermittedAction] = useState<string>('add');
     const [loading, setLoading] = useState<boolean>(false);
 
@@ -81,9 +83,7 @@ export default function WebsitesList() {
         loadLocalDatabases();
     });
 
-    console.log(databaseNotTrusted, databaseTrusted, databasePermitted)
-
-    if (!databaseNotTrusted || !databaseNotTrusted.data || !databaseTrusted || !databaseTrusted.data  || !databasePermitted) {
+    if (!databaseNotTrusted || !databaseNotTrusted.data || !databaseTrusted || !databaseTrusted.data || !databasePermitted) {
         return (
             <LocalDatabaseErrorState
                 onRetry={loadLocalDatabases}
@@ -92,11 +92,51 @@ export default function WebsitesList() {
         );
     }
 
+    const addPermittedItem = async () => {
+        if (!permittedWebsite || !permittedAction || !expirationDate) return;
+
+        //Verify if the url is already in permitted list
+        const isInPermittedDatabase = databasePermitted.data.find(
+            (item) => item.url.toLowerCase() === permittedWebsite
+        );
+
+        console.log(isInPermittedDatabase)
+
+        //Create new Item
+        const newItem = {
+            url: permittedWebsite,
+            action: permittedAction,
+            expiresAt: Number(expirationDate), // this will be epoch (ms)
+        };
+        // Add to local var
+        const nextData: PermittedStore = {
+            description: databasePermitted.description,
+            data: [...(databasePermitted?.data ?? []), newItem],
+        };
+
+        databasePermitted.data = nextData.data; // update local variable
+
+        // Save to chrome storage
+        try {
+            await chrome.storage.local.set({
+                permittedWebsites: JSON.stringify(nextData),
+            });
+            console.log("Saved permitted item:", newItem);
+        } catch (err) {
+            console.error("Error saving permitted item", err);
+        }
+
+        // Reset inputs
+        setPermittedWebsite("");
+        setPermittedAction("");
+        setExpirationDate("");
+    };
+
 
     async function removePermittedItem(target: PermittedItem): Promise<PermittedStore> {
         // build the next store immutably
         const nextStore: PermittedStore = {
-            description: databasePermitted? databasePermitted.description : "",
+            description: databasePermitted ? databasePermitted.description : "",
             data: (databasePermitted?.data ?? []).filter(
                 it => !(it.url === target.url && it.expiresAt === target.expiresAt) // url+expiresAt as key
             ),
@@ -153,7 +193,7 @@ export default function WebsitesList() {
                 </Card>
                 <Card className="w-1/3">
                     <CardHeader className="text-lg font-semibold">
-                        Threads
+                        Threats
                     </CardHeader>
                     <CardContent className="flex flex-col gap-5">
                         <p className="text-3xl font-bold text-destructive">{stats.dangerous}</p>
@@ -170,55 +210,11 @@ export default function WebsitesList() {
                     </CardContent>
                 </Card>
             </div>
-            {/* PERMITTED ACTIONS */}
-            <Card>
-                <CardHeader className="flex flex-row items-center gap-2">
-                    <CircleCheck className="icon-primary w-4 h-4" />
-                    <h3 className="text-xl font-bold">Permitted Actions</h3>
-                </CardHeader>
-                <CardContent className="flex flex-row items-center gap-5">
-                    <Input className="w-5/6" />
-                    <Select value={permittedAction} onValueChange={setPermittedAction}>
-                        <SelectTrigger className="md:w-48 cursor-pointer w-1/6">
-                            <SelectValue placeholder="All Categories" />
-                        </SelectTrigger>
-
-                        <SelectContent>
-                            {permittedActions.map(opt => (
-                                <SelectItem key={opt.value} value={opt.value} className="cursor-pointer">
-                                    {opt.label}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                    <Button className="w-1/6 cursor-pointer">
-                        Add
-                    </Button>
-                </CardContent>
-            </Card>
-            {/* PERMITTED LIST */}
-            <Card>
-                <CardHeader className="flex flex-row items-center gap-2">
-                    <CircleCheck className="icon-primary w-4 h-4" />
-                    <h3 className="text-xl font-bold">Permitted List</h3>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableCaption>A list of permitted websites in local database.</TableCaption>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Domain</TableHead>
-                                <TableHead>Expires At</TableHead>
-                                <TableHead>Details</TableHead>
-                                <TableHead>Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            <LocalDatabasePermittedable permittedItems={databasePermitted.data} onRemove={handleRemove} />
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
+            {/* PERMITTED  SECTION */}
+            <LocalDatabasePermittedSection setPermittedWebsite={setPermittedWebsite} addPermittedItem={addPermittedItem} handleRemove={handleRemove}
+                permittedAction={permittedAction} setPermittedAction={setPermittedAction}
+                expirationDate={expirationDate} setExpirationDate={setExpirationDate}
+                databasePermitted={databasePermitted} />
             {/* Filters */}
             <Card>
                 <CardHeader className="flex flex-row items-center gap-2">

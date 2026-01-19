@@ -8,7 +8,7 @@ import {
     AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger
 } from "@/components/ui/alert-dialog";
 import Footer from "../components/Footer";
-import { HistoryStore, PermittedStore, SettingsStore } from "@/common/interfaces";
+import { HistoryStore, PermittedItem, PermittedStore, SettingsStore } from "@/common/interfaces";
 
 function getJSON<T>(key: string): Promise<T | null> {
     return new Promise((resolve) => {
@@ -22,51 +22,22 @@ function getJSON<T>(key: string): Promise<T | null> {
     });
 }
 
-function domainFromQuery(): string | null {
-    try {
-        const u = new URL(window.location.href).searchParams.get("u");
-        return u && u.trim() ? u.trim() : null;
-    } catch {
-        return null;
-    }
-}
-
-function lastDomainFromHistory(hist: HistoryStore | null): string | null {
-    const list = hist?.data ?? [];
-    for (let i = list.length - 1; i >= 0; i--) {
-        const u = list[i]?.url ?? "";
-        if (!/^https?:\/\//i.test(u)) return u;
-    }
-    return null;
-}
-
 export default function WarningPage() {
     const [domain, setDomain] = useState<string>("");
 
-    // load domain from ?u=… or fallback to history
+    // load domain from history of the extension
     useEffect(() => {
         (async () => {
-            const fromQuery = domainFromQuery();
-            if (fromQuery) {
-                setDomain(fromQuery);
-                return;
-            }
             const hist = await getJSON<HistoryStore>("historyWebsites");
-            const last = lastDomainFromHistory(hist);
+            if (!hist) {
+                alert("an error occurred")
+            }
+            const last = hist?.data[0].url;
             if (last) setDomain(last);
         })();
     }, []);
 
     const prettyDomain = useMemo(() => domain || "WEBSITE NAME", [domain]);
-
-    const handleBackToSafety = useCallback(() => {
-        // Prefer replacing current tab with a neutral page
-        chrome.tabs?.query({ active: true, currentWindow: true }, (tabs) => {
-            const id = tabs[0]?.id;
-            if (id) chrome.tabs.update(id, { url: "http://localhost:8080" });
-            else window.location.href = "http://localhost:8080";
-        });
-    }, []);
 
     const handleProceed = useCallback(async () => {
         try {
@@ -74,16 +45,37 @@ export default function WarningPage() {
                 getJSON<PermittedStore>("permittedWebsites"),
                 getJSON<SettingsStore>("settings"),
             ]);
+            if (!permitted || !settings) {
+                return
+            }
 
-            const duration =
-                settings?.data?.ignoreScamSiteDurationMs ??
-                settings?.data?.ignoreScamSiteDurationMs ?? // tolerate older key
-                5 * 60_000; // fallback 5 min
+            //verify if there is any record 
+            const alreadyExistsDomain = permitted.data.filter((item) => item.url === domain);
 
-            const entry = { url: domain, expiresAt: Date.now() + duration };
-            const next: PermittedStore = { description: permitted?.description as string, data: [...(permitted?.data ?? []), entry] };
+            //If already exists any item
+            if (alreadyExistsDomain.length > 1) {
+                try {
+                    await chrome.runtime.sendMessage({ action: "removeFromPermitted" });
+                } catch {/* ignore */ }
 
-            await chrome.storage.local.set({ permittedWebsites: JSON.stringify(next) });
+            } else {//there is no item in permitted of the website
+                const duration =
+                    settings?.data?.ignoreScamSiteDurationMs ??
+                    settings?.data?.ignoreScamSiteDurationMs ?? // tolerate older key
+                    5 * 60_000; // fallback 5 min
+
+                const entry = { url: domain, action: "add", expiresAt: Date.now() + duration };
+                const nextPermittedData: PermittedItem[] = [...(permitted?.data ?? []), entry];
+
+                permitted.data = nextPermittedData
+
+                try {
+                    await chrome.storage.local.set({ permittedWebsites: JSON.stringify(permitted) });
+                } catch (err) {
+                    console.log("error " + err)
+                }
+
+            }
 
             // Go to the risky site in THIS tab
             const target = domain.startsWith("http") ? domain : `https://${domain}`;
@@ -141,7 +133,7 @@ export default function WarningPage() {
                             </span>
 
                             <Button variant="link">
-                                <a href={`http://localhost:8080/website/${prettyDomain}`} className="flex flex-row gap-2 text-muted-foreground hover:text-foreground cursor-pointer" >
+                                <a target="_blank" href={`http://localhost:8080/website/${prettyDomain}`} className="flex flex-row gap-2 text-muted-foreground hover:text-foreground cursor-pointer" >
                                     <ExternalLink className=" w-5 h-5" />
                                     <p>Details</p>
                                 </a>
@@ -151,9 +143,12 @@ export default function WarningPage() {
 
                     {/* actions */}
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-                        <Button id="back-btn" onClick={handleBackToSafety} className="h-10 px-5 font-semibold cursor-pointer">
-                            Back to safety
-                        </Button>
+                        <a href="http://localhost:8080/">
+                            <Button id="back-btn" className="h-10 px-5 font-semibold cursor-pointer">
+                                Back to safety
+                            </Button>
+                        </a>
+
 
                         <AlertDialog>
                             <AlertDialogTrigger asChild>
