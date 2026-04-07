@@ -79,8 +79,8 @@ async function fetchDataAndStore(): Promise<void> {
   ]; */
 
   const urls = [
-    "http://localhost:8800/api/v1/websites/extension?is_not_trusted=true",
-    "http://localhost:8800/api/v1/websites/extension?is_not_trusted=false"
+    "https://api.steamshark.app/api/v1/websites?is_not_trusted=true",
+    "https://api.steamshark.app/api/v1/websites?is_not_trusted=false"
   ]
 
   // If you need current trust list for merging, read it here:
@@ -91,28 +91,23 @@ async function fetchDataAndStore(): Promise<void> {
       const response = await fetch(url);
       const data = (await response.json()) as apiGetResponse;
 
-      const enrichedData =
-        url.includes("is_not_trusted=true")
-          ? ({
-            data: Array.isArray((data as NotTrustedStore).data)
-              ? (data as NotTrustedStore).data
-              : null,
-            description: (data as NotTrustedStore).description,
-            lastCheckup: new Date().toISOString(),
-          } satisfies NotTrustedStore)
-          : ({
-            data: Array.isArray((data as TrustedStore).data)
-              ? (data as TrustedStore).data
-              : null,
-            description: (data as TrustedStore).description,
-            lastCheckup: new Date().toISOString(),
-          } satisfies TrustedStore);
+      console.log(data);
+
+      const items = Array.isArray(data.data?.data)
+        ? data.data.data.map(({ url, description }) => ({ url, description }))
+        : null;
+
+      const enrichedData = {
+        data: items,
+        lastCheckup: new Date().toISOString(),
+      };
 
       if (url.includes("is_not_trusted=true")) {
-        console.log("not trusted ", enrichedData)
-        await setLocalJSON("notTrustedWebsites", enrichedData);
+        console.log("not trusted ", enrichedData);
+        await setLocalJSON("notTrustedWebsites", enrichedData satisfies NotTrustedStore);
       } else {
-        await setLocalJSON("trustedWebsites", enrichedData);
+        console.log("trusted ", enrichedData);
+        await setLocalJSON("trustedWebsites", enrichedData satisfies TrustedStore);
       }
 
       console.log(

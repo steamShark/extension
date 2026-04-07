@@ -276,7 +276,7 @@ function injectPopup(
       newParagraph.innerHTML = "🦈 This website is trusted!";
       newParagraph.style.fontSize = "large"
       learnMoreLink.innerHTML = "Learn more about the website"
-      learnMoreLink.href = `http://localhost:8080/website/${textAdd}`
+      learnMoreLink.href = `https://steamshark.app/website/${textAdd}`
       secondDiv.appendChild(learnMoreLink)
       divWrapper.style.backgroundColor = "rgba(11,156,49,0.85)";
       break;
@@ -284,9 +284,9 @@ function injectPopup(
       newParagraph.innerHTML = "🦈 This website is NOT trusted!";
       newParagraph.style.fontSize = "large"
       learnMoreLink.innerHTML = "Learn more about the website"
-      learnMoreLink.href = `http://localhost:8080/website/${textAdd}`
+      learnMoreLink.href = `https://steamshark.app/website/${textAdd}`
       returnSafetyLink.innerHTML = "Return to safety"
-      returnSafetyLink.href = `http://localhost:8080/`
+      returnSafetyLink.href = `https://steamshark.app`
       secondDiv.appendChild(returnSafetyLink)
       secondDiv.appendChild(learnMoreLink)
       divWrapper.style.backgroundColor = "rgba(252, 94, 94, 0.85)";

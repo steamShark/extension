@@ -133,7 +133,7 @@ export default function WarningPage() {
                             </span>
 
                             <Button variant="link">
-                                <a target="_blank" href={`http://localhost:8080/website/${prettyDomain}`} className="flex flex-row gap-2 text-muted-foreground hover:text-foreground cursor-pointer" >
+                                <a target="_blank" href={`https://steamshark.app/website/${prettyDomain}`} className="flex flex-row gap-2 text-muted-foreground hover:text-foreground cursor-pointer" >
                                     <ExternalLink className=" w-5 h-5" />
                                     <p>Details</p>
                                 </a>
@@ -143,7 +143,7 @@ export default function WarningPage() {
 
                     {/* actions */}
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-                        <a href="http://localhost:8080/">
+                        <a href="https://steamshark.app">
                             <Button id="back-btn" className="h-10 px-5 font-semibold cursor-pointer">
                                 Back to safety
                             </Button>

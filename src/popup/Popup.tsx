@@ -70,7 +70,7 @@ export default function Popup() {
             {/* FOOTER */}
             <footer>
                 <a
-                    href="https://franciscoborges2002.github.io/steamShark/"
+                    href="https://steamshark.app"
                     target="_blank"
                     rel="noreferrer"
                 >

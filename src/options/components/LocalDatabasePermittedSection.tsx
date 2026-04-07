@@ -69,7 +69,7 @@ export default function LocalDatabasePermittedSection({ setPermittedWebsite, per
                                     : tomorrow.toISOString().slice(0, 16) // default tomorrow
                             }
                             onChange={(e) => {
-                                const isoString = e.target.value; // "2025-10-10T21:36"
+                                const isoString = e.target.value;
                                 const epochMs = new Date(isoString).getTime();
                                 setExpirationDate(String(epochMs));
                             }}

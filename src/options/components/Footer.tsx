@@ -16,7 +16,7 @@ export default function Footer() {
   return (
     <footer className="border-t border-separator bg-card">
       <div className="container footer-inner">
-        <p>© 2025 steamShark Extension. All rights reserved.</p>
+        <p>© 2026 steamShark Extension. All rights reserved.</p>
         <div className="footer-links">
           <span>{version}</span>
           <span className="dot">•</span>
