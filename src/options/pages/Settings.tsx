@@ -146,9 +146,9 @@ export default function Settings() {
                             </SelectTrigger>
                             <SelectContent className="bg-background">
                                 <SelectItem value="tr">Right (top)</SelectItem>
-                                <SelectItem value="tp">Left (top)</SelectItem>
-                                <SelectItem value="tb">Right (bottom)</SelectItem>
-                                <SelectItem value="lb">Left (bottom)</SelectItem>
+                                <SelectItem value="tl">Left (top)</SelectItem>
+                                <SelectItem value="br">Right (bottom)</SelectItem>
+                                <SelectItem value="bt">Left (bottom)</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>

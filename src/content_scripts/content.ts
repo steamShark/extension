@@ -194,7 +194,7 @@ async function verifyWebsite(
       await chrome.runtime.sendMessage({ action: "registerHistoryStorage", trusted: true });
     } catch {/* ignore */ }
 
-    injectPopup(true, origin, {
+    injectPopup(true, urlObject.hostname, {
       popupPosition: resultJSONsettings.data.popupPosition,
       showPopUpInRepeatedTrustedWebsite:
         resultJSONsettings.data.showPopUpInRepeatedTrustedWebsite,
